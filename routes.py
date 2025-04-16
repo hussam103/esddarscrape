@@ -220,9 +220,10 @@ def register_routes(app):
             if time_filter:
                 now = datetime.utcnow()
                 if time_filter == 'today':
-                    # Get the start of the current day (midnight UTC)
-                    today_start = datetime(now.year, now.month, now.day, 0, 0, 0)
-                    time_threshold = today_start
+                    # Instead of using day boundaries (which are timezone dependent)
+                    # Use the last 24 hours from now for "today" to ensure recent results
+                    # This ensures that very recent tenders are included regardless of timezone
+                    time_threshold = now - timedelta(hours=24)
                 elif time_filter == '24h':
                     time_threshold = now - timedelta(hours=24)
                 elif time_filter == '7d':

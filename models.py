@@ -49,8 +49,9 @@ class Tender(db.Model):
         """Get the text that will be used for embedding"""
         title = self.tender_title or ""
         org = self.organization or ""
-        # Combine title and organization for better semantic search
-        return f"{title} {org}"
+        activities = self.main_activities or ""
+        # Combine title, organization, and main activities for better semantic search
+        return f"{title} {org} {activities}"
 
 
 class TenderEmbedding(db.Model):

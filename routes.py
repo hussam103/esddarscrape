@@ -1,4 +1,5 @@
 import logging
+import threading
 from datetime import datetime, timedelta
 from flask import render_template, jsonify, request
 from models import Tender, ScrapingLog, TenderEmbedding
@@ -312,4 +313,33 @@ def register_routes(app):
             })
         except Exception as e:
             logger.error(f"Error generating embeddings: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+            
+    @app.route('/api/embeddings/regenerate-all', methods=['POST'])
+    def api_regenerate_all_embeddings():
+        """API endpoint to regenerate all embeddings with new text structure including main activities"""
+        try:
+            # Import the regeneration module
+            from regenerate_all_embeddings import regenerate_all_embeddings
+            
+            # Run the process in a background thread to avoid timeouts
+            def run_regeneration():
+                with app.app_context():
+                    try:
+                        regenerate_all_embeddings()
+                        logger.info("Successfully regenerated all embeddings with new text structure")
+                    except Exception as e:
+                        logger.error(f"Error during embeddings regeneration: {str(e)}")
+            
+            # Start the regeneration in a background thread
+            thread = threading.Thread(target=run_regeneration)
+            thread.daemon = True
+            thread.start()
+            
+            return jsonify({
+                'status': 'success',
+                'message': 'Started regeneration of all embeddings with the new text structure (including main activities). This process will run in the background and may take some time.'
+            })
+        except Exception as e:
+            logger.error(f"Error starting embeddings regeneration: {str(e)}")
             return jsonify({'error': str(e)}), 500

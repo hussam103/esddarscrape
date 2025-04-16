@@ -321,6 +321,11 @@ function initializeVectorSearch() {
     // Add event listeners
     document.getElementById('run-vector-search').addEventListener('click', performVectorSearch);
     document.getElementById('generate-embeddings').addEventListener('click', generateEmbeddings);
+    document.getElementById('regenerate-all-embeddings').addEventListener('click', regenerateAllEmbeddings);
+    
+    // Initialize tooltips
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
     
     // Add event listener for tab switch to reload stats
     const vectorTab = document.getElementById('vector-tab');

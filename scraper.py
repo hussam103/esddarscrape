@@ -17,25 +17,42 @@ class EtimadScraper:
     
     def __init__(self):
         self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36',
             'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Content-Type': 'application/json;charset=UTF-8',
+            'Accept-Language': 'en-US,en;q=0.9,ar;q=0.8',
+            'Content-Type': 'application/json',
             'Origin': 'https://tenders.etimad.sa',
             'Referer': 'https://tenders.etimad.sa/Tender/Tenders/1',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-origin',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
             'Connection': 'keep-alive',
         }
         self.session = requests.Session()
+        # Set default language cookie to help with authentication
+        self.session.cookies.set('language', 'ar-SA', domain='tenders.etimad.sa')
     
     def _prepare_request(self):
-        """Prepare the request by visiting the main page to get cookies"""
+        """Prepare the request by visiting the main page to get cookies and tokens"""
         try:
             main_page = self.session.get(self.BASE_URL, headers=self.headers)
             main_page.raise_for_status()
-            logger.debug("Successfully visited main page to get cookies")
+            
+            # Extract the anti-forgery token
+            import re
+            token_match = re.search(r'name="__RequestVerificationToken" type="hidden" value="([^"]+)"', main_page.text)
+            if token_match:
+                token_value = token_match.group(1)
+                logger.debug(f"Extracted RequestVerificationToken: {token_value[:10]}...")
+                
+                # Add the token to headers
+                self.headers['RequestVerificationToken'] = token_value
+                
+                # Also add a form field for the token
+                self.session.cookies.set('__RequestVerificationToken', token_value, domain='tenders.etimad.sa')
+            else:
+                logger.warning("Could not extract RequestVerificationToken from the page")
+            
+            logger.debug("Successfully visited main page to get cookies and tokens")
             # Add a small delay to simulate human behavior
             time.sleep(random.uniform(1, 3))
         except requests.RequestException as e:
@@ -81,20 +98,17 @@ class EtimadScraper:
             self._prepare_request()
             
             # Define the payload to get 300 tenders from page 1
+            # Simplified payload based on current API requirements
             payload = {
                 "PageNumber": 1,
                 "PageSize": 300,
                 "OrderByValue": {},
                 "SelectedGovAgencies": [],
                 "SearchText": "",
-                "IsLocalCompetitions": True,
-                "IsEffectiveCompetitions": True,
-                "IsFundedCompetitions": False,
-                "IsPreQualificationCompetitions": False,
-                "IsPracticeCompetitions": False,
-                "IsRejectedCompetitions": False,
                 "SelectedTenderActivities": []
             }
+            
+            logger.debug(f"Sending payload: {payload}")
             
             # Make the API request
             response = self.session.post(
@@ -102,6 +116,10 @@ class EtimadScraper:
                 headers=self.headers,
                 json=payload
             )
+            
+            # Log the response status and headers for debugging
+            logger.debug(f"Response status: {response.status_code}")
+            logger.debug(f"Response headers: {response.headers}")
             response.raise_for_status()
             
             data = response.json()

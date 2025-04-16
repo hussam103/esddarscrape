@@ -4,6 +4,7 @@ from flask import render_template, jsonify, request
 from models import Tender, ScrapingLog
 from scraper import run_scraper
 from sqlalchemy import desc, func
+from app import db
 
 logger = logging.getLogger(__name__)
 

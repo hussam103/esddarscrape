@@ -1,0 +1,248 @@
+"""
+Direct scraper for Etimad Tenders without proxy
+Uses direct connection to fetch tender data
+"""
+import json
+import logging
+import time
+from datetime import datetime
+
+import requests
+import urllib3
+
+from app import app, db
+from models import Tender, ScraperSetting
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Disable InsecureRequestWarning
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+def save_tenders_to_db(tenders):
+    """Save tenders to the database"""
+    new_count = 0
+    updated_count = 0
+    
+    try:
+        for tender_data in tenders:
+            # Check if tender already exists
+            existing_tender = Tender.query.filter_by(tender_id=tender_data['tender_id']).first()
+            
+            if existing_tender:
+                # Update existing tender
+                existing_tender.tender_name = tender_data['tender_name']
+                existing_tender.agency = tender_data['agency']
+                existing_tender.category = tender_data['category']
+                if tender_data['start_date']:
+                    existing_tender.start_date = tender_data['start_date']
+                if tender_data['end_date']:
+                    existing_tender.end_date = tender_data['end_date']
+                existing_tender.city = tender_data['city']
+                existing_tender.price = tender_data['price']
+                existing_tender.url = tender_data['url']
+                existing_tender.scrape_date = datetime.utcnow()
+                updated_count += 1
+            else:
+                # Create new tender
+                new_tender = Tender(
+                    tender_id=tender_data['tender_id'],
+                    tender_name=tender_data['tender_name'],
+                    agency=tender_data['agency'],
+                    category=tender_data['category'],
+                    start_date=tender_data['start_date'],
+                    end_date=tender_data['end_date'],
+                    city=tender_data['city'],
+                    price=tender_data['price'],
+                    url=tender_data['url'],
+                    scrape_date=datetime.utcnow()
+                )
+                db.session.add(new_tender)
+                new_count += 1
+        
+        # Commit changes
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"Error saving tenders to database: {e}")
+        db.session.rollback()
+    
+    logger.info(f"Saved {new_count} new tenders and updated {updated_count} existing tenders")
+    return new_count, updated_count
+
+def fetch_tenders_direct():
+    """
+    Fetch tenders directly without using a proxy
+    """
+    base_url = "https://tenders.etimad.sa"
+    api_endpoint = "/Tender/AllSupplierTendersForVisitorAsync"
+    tenders = []
+    
+    # Set up headers to mimic a browser
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'en-US,en;q=0.9,ar;q=0.8',
+        'Referer': 'https://tenders.etimad.sa/',
+        'Origin': 'https://tenders.etimad.sa',
+        'X-Requested-With': 'XMLHttpRequest',
+        'Connection': 'keep-alive',
+    }
+    
+    # Try only page 1 with larger batch size
+    total_tenders = 0
+    
+    # Try only page 1
+    page_num = 1
+    logger.info(f"Fetching page {page_num}")
+    
+    # Basic params with larger batch size
+    params = {
+        'pageNumber': page_num,
+        'pageSize': 300,
+    }
+    
+    try:
+        # Make the request
+        api_url = f"{base_url}{api_endpoint}"
+        logger.info(f"Making request to {api_url} with params: {params}")
+        
+        response = requests.get(
+            api_url,
+            params=params,
+            headers=headers,
+            timeout=30,
+            verify=False
+        )
+        
+        if response.status_code == 200:
+            logger.info(f"Successfully got response from API endpoint")
+            try:
+                # Parse as JSON
+                api_data = json.loads(response.text)
+                logger.info(f"Successfully parsed JSON from API response")
+                
+                # Extract tender data
+                if 'data' in api_data and isinstance(api_data['data'], list):
+                    tender_items = api_data['data']
+                    logger.info(f"Found {len(tender_items)} items in API response")
+                    
+                    page_tenders = []
+                    for item in tender_items:
+                        try:
+                            # Extract tender ID
+                            tender_id = str(item.get('tenderId', ''))
+                            
+                            # Extract tender name
+                            tender_name = item.get('tenderName', '')
+                            
+                            # Extract other fields
+                            agency = item.get('agencyName', 'Unknown')
+                            category = item.get('tenderTypeName', 'Unknown')
+                            city = item.get('cityName', 'Unknown')
+                            price = str(item.get('estimatedValue', ''))
+                            
+                            # Process dates
+                            start_date = None
+                            end_date = None
+                            
+                            if 'submitionDate' in item and item['submitionDate']:
+                                try:
+                                    date_str = item['submitionDate']
+                                    if isinstance(date_str, str) and 'T' in date_str:
+                                        date_str = date_str.split('T')[0]
+                                    start_date = datetime.strptime(date_str, '%Y-%m-%d')
+                                except:
+                                    pass
+                            
+                            if 'lastOfferPresentationDate' in item and item['lastOfferPresentationDate']:
+                                try:
+                                    date_str = item['lastOfferPresentationDate']
+                                    if isinstance(date_str, str) and 'T' in date_str:
+                                        date_str = date_str.split('T')[0]
+                                    end_date = datetime.strptime(date_str, '%Y-%m-%d')
+                                except:
+                                    pass
+                            
+                            # Construct URL
+                            url = f"{base_url}/Tender/TenderDetails/{tender_id}" if tender_id else ""
+                            
+                            # Add to results if we have both tender_id and tender_name
+                            if tender_id and tender_name:
+                                page_tenders.append({
+                                    'tender_id': tender_id,
+                                    'tender_name': tender_name,
+                                    'agency': agency,
+                                    'category': category,
+                                    'start_date': start_date,
+                                    'end_date': end_date,
+                                    'city': city,
+                                    'price': price,
+                                    'url': url
+                                })
+                        except Exception as e:
+                            logger.error(f"Error processing tender item: {e}")
+                    
+                    # Save tenders from this page
+                    if page_tenders:
+                        logger.info(f"Found {len(page_tenders)} valid tenders on page {page_num}")
+                        tenders.extend(page_tenders)
+                        
+                else:
+                    logger.warning(f"Invalid response format - no data field or not a list")
+            
+            except Exception as e:
+                logger.error(f"Error parsing API response: {e}")
+        else:
+            logger.error(f"Bad response status: {response.status_code}")
+    
+    except requests.exceptions.Timeout:
+        logger.error(f"Request to page {page_num} timed out")
+    except Exception as e:
+        logger.error(f"Error fetching page {page_num}: {e}")
+    
+    return tenders
+
+def run_direct_scraper():
+    """Run the direct scraper without proxy"""
+    logger.info("Starting direct scraper without proxy")
+    
+    with app.app_context():
+        # Update scraper settings
+        settings = ScraperSetting.query.first()
+        settings.last_run = datetime.utcnow()
+        settings.is_active = True
+        db.session.commit()
+        
+        try:
+            # Fetch tenders
+            tenders = fetch_tenders_direct()
+            
+            if tenders:
+                logger.info(f"Found total of {len(tenders)} tenders")
+                new_count, updated_count = save_tenders_to_db(tenders)
+                logger.info(f"Direct scraping completed. Processed {new_count + updated_count} tenders.")
+            else:
+                logger.warning("No tenders found")
+            
+            # Update scraper settings
+            settings = ScraperSetting.query.first()
+            settings.is_active = False
+            db.session.commit()
+            
+            return len(tenders)
+            
+        except Exception as e:
+            logger.error(f"Error in direct scraper: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            
+            # Update scraper settings
+            settings = ScraperSetting.query.first()
+            settings.is_active = False
+            db.session.commit()
+            
+            return 0
+
+if __name__ == "__main__":
+    run_direct_scraper()

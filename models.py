@@ -17,6 +17,9 @@ class Tender(db.Model):
     inquiry_deadline = db.Column(db.DateTime, nullable=True)
     submission_deadline = db.Column(db.DateTime, nullable=True)
     opening_date = db.Column(db.DateTime, nullable=True)
+    # Additional fields for new data structure
+    city = db.Column(db.String(255), nullable=True)
+    price = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     
@@ -35,6 +38,8 @@ class Tender(db.Model):
             'inquiry_deadline': self.inquiry_deadline.isoformat() if self.inquiry_deadline else None,
             'submission_deadline': self.submission_deadline.isoformat() if self.submission_deadline else None,
             'opening_date': self.opening_date.isoformat() if self.opening_date else None,
+            'city': self.city,
+            'price': self.price,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

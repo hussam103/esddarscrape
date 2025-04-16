@@ -100,8 +100,8 @@ function initializeTendersTable() {
         paging: true,
         ordering: false,  // Disable client-side sorting as we'll use server-side sorting
         searching: false,  // We handle search via our own filters
-        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-        pageLength: 25,
+        lengthMenu: [[25, 50, 100, 300], [25, 50, 100, 300]],
+        pageLength: 100,
         language: {
             processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
             emptyTable: 'No tenders found'
@@ -211,6 +211,8 @@ function initializeTenderDetailsModal() {
         document.getElementById('tender-inquiry-deadline').textContent = '';
         document.getElementById('tender-opening-date').textContent = '';
         document.getElementById('tender-duration').textContent = '';
+        document.getElementById('tender-city').textContent = '';
+        document.getElementById('tender-price').textContent = '';
         document.getElementById('tender-activities').textContent = '';
         document.getElementById('tender-url').href = '#';
     });
@@ -248,6 +250,8 @@ function showTenderDetails(tenderId) {
             document.getElementById('tender-inquiry-deadline').textContent = formatDate(tender.inquiry_deadline);
             document.getElementById('tender-opening-date').textContent = formatDate(tender.opening_date);
             document.getElementById('tender-duration').textContent = tender.duration || 'N/A';
+            document.getElementById('tender-city').textContent = tender.city || 'N/A';
+            document.getElementById('tender-price').textContent = tender.price || 'N/A';
             document.getElementById('tender-activities').textContent = tender.main_activities || 'N/A';
             document.getElementById('tender-url').href = tender.tender_url || '#';
             

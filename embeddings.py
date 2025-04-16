@@ -182,13 +182,18 @@ def search_similar_tenders(query_text, limit=10):
     # Create embedding for the query
     query_embedding = create_embedding(query_text)
     
-    # Search for similar tenders
+    # Get current date for filtering out passed tenders
+    now = datetime.datetime.utcnow()
+    
+    # Search for similar tenders excluding those with passed submission dates
     results = db.session.query(
         Tender, 
         TenderEmbedding.embedding.cosine_distance(query_embedding).label('distance')
     ).join(
         TenderEmbedding,
         Tender.tender_id == TenderEmbedding.tender_id
+    ).filter(
+        (Tender.submission_deadline.is_(None)) | (Tender.submission_deadline > now)
     ).order_by(
         'distance'
     ).limit(limit).all()

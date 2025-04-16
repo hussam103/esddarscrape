@@ -5,6 +5,7 @@ from apscheduler.triggers.cron import CronTrigger
 from flask import Flask
 from scraper import run_scraper
 import generate_embeddings_incremental
+from embeddings import cleanup_expired_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -51,10 +52,30 @@ def init_scheduler(app: Flask):
         replace_existing=True
     )
     
+    # Schedule cleanup of expired embeddings to run daily at 5 AM UTC
+    scheduler.add_job(
+        func=run_cleanup_with_app_context(app),
+        trigger=CronTrigger(hour='5', minute='0'),
+        id='cleanup_job',
+        name='Clean Up Expired Embeddings',
+        replace_existing=True
+    )
+    
+    # Add initial cleanup job to run 1 minute after startup
+    scheduler.add_job(
+        func=run_cleanup_with_app_context(app),
+        trigger='date',  # Run once after a delay
+        run_date=datetime.datetime.now() + datetime.timedelta(minutes=1),
+        id='initial_cleanup',
+        name='Initial Expired Embeddings Cleanup',
+        replace_existing=True
+    )
+    
     # Start the scheduler
     scheduler.start()
     logger.info("Scheduler started, scraper will run at 6 AM, 2 PM, and 10 PM UTC")
     logger.info("Embeddings generator will run at 7 AM, 3 PM, and 11 PM UTC")
+    logger.info("Expired embeddings cleanup will run daily at 5 AM UTC")
     logger.info("Initial scrape will run in the background after startup")
 
 def run_scraper_with_app_context(app: Flask):
@@ -75,4 +96,14 @@ def run_embeddings_with_app_context(app: Flask):
                 delay=5,
                 max_batches=3
             )
+    return wrapper
+
+
+def run_cleanup_with_app_context(app: Flask):
+    """Return a function that runs the expired embeddings cleanup within the app context"""
+    def wrapper():
+        with app.app_context():
+            # Clean up expired embeddings
+            removed = cleanup_expired_embeddings()
+            logger.info(f"Cleaned up {removed} expired embeddings from vector database")
     return wrapper

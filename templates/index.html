@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+
+{% block title %}Home - Etimad Tender Tracker{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body text-center p-5">
+        <h1 class="display-4 mb-4">Etimad Tender Tracker</h1>
+        <p class="lead">A service that scrapes and tracks tender data from etimad.sa</p>
+        <hr class="my-4">
+        <p>This application automatically fetches tender data 3 times per day and provides a comprehensive dashboard to explore and analyze the data.</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="/dashboard" class="btn btn-primary">
+                <i class="fas fa-chart-line me-2"></i>View Dashboard
+            </a>
+            <a href="/tenders" class="btn btn-secondary">
+                <i class="fas fa-list me-2"></i>Browse Tenders
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-robot me-2"></i>Automated Scraping
+                </h5>
+                <p class="card-text">The system automatically scrapes tender data from etimad.sa three times a day to ensure you have the most up-to-date information.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-chart-pie me-2"></i>Dashboard Analytics
+                </h5>
+                <p class="card-text">Visualize tender data through interactive charts and graphs to identify trends and opportunities.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-search me-2"></i>Advanced Search
+                </h5>
+                <p class="card-text">Easily search and filter through tenders by organization, type, date and more to find exactly what you're looking for.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Latest Scraping Activities</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped" id="logsTable">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Status</th>
+                        <th>Tenders Scraped</th>
+                        <th>New Tenders</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                    <tr>
+                        <td colspan="5" class="text-center">Loading latest logs...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Fetch and display the latest logs
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/logs?per_page=5')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('logsTableBody');
+                tableBody.innerHTML = '';
+                
+                if (data.logs && data.logs.length > 0) {
+                    data.logs.forEach(log => {
+                        const row = document.createElement('tr');
+                        
+                        // Format the date
+                        const startTime = new Date(log.start_time);
+                        const formattedDate = startTime.toLocaleString();
+                        
+                        // Set status class
+                        let statusClass = '';
+                        if (log.status === 'SUCCESS') {
+                            statusClass = 'text-success';
+                        } else if (log.status === 'ERROR') {
+                            statusClass = 'text-danger';
+                        } else if (log.status === 'RUNNING') {
+                            statusClass = 'text-warning';
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${formattedDate}</td>
+                            <td><span class="${statusClass}">${log.status}</span></td>
+                            <td>${log.tenders_scraped}</td>
+                            <td>${log.new_tenders}</td>
+                            <td>${log.message ? log.message.substring(0, 100) + (log.message.length > 100 ? '...' : '') : ''}</td>
+                        `;
+                        
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="5" class="text-center">No logs found</td>';
+                    tableBody.appendChild(row);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching logs:', error);
+                const tableBody = document.getElementById('logsTableBody');
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading logs</td></tr>';
+            });
+    });
+</script>
+{% endblock %}

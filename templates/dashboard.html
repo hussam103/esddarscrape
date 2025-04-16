@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - Etimad Tender Tracker{% endblock %}
+
+{% block head %}
+<style>
+    .stat-card {
+        transition: transform 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<div class="row" id="stats-cards">
+    <div class="col-md-4 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total Tenders</h5>
+                <p class="display-4" id="total-tenders">-</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Last Scrape Status</h5>
+                <p class="display-6" id="last-scrape-status">-</p>
+                <small id="last-scrape-time">-</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card stat-card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">New Tenders (Last Scrape)</h5>
+                <p class="display-4" id="new-tenders">-</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Tenders by Type</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="tendersByTypeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Tenders by Date (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="tendersByDateChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Top Organizations</h5>
+    </div>
+    <div class="card-body">
+        <div class="chart-container">
+            <canvas id="tendersByOrgChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Recent Scraping Logs</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped" id="logsTable">
+                <thead>
+                    <tr>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Status</th>
+                        <th>Tenders Scraped</th>
+                        <th>New Tenders</th>
+                        <th>Updated Tenders</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                    <tr>
+                        <td colspan="7" class="text-center">Loading logs...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

@@ -28,16 +28,9 @@ def register_routes(app):
     def api_tenders():
         """API endpoint to get tenders with pagination and filtering"""
         try:
-            # Get query parameters for pagination and filtering
-            page = request.args.get('page', 1, type=int)
-            per_page = request.args.get('per_page', 300, type=int)
-            # For DataTables server-side processing
-            # If the length parameter is -1, return all records
-            if per_page == -1:
-                per_page = 300
-            # Allow up to 300 tenders per page
-            elif per_page > 300:
-                per_page = 300
+            # Always return all tenders by default for better performance with client-side DataTables
+            page = 1
+            per_page = 300
             search = request.args.get('search', '')
             organization = request.args.get('organization', '')
             tender_type = request.args.get('tender_type', '')

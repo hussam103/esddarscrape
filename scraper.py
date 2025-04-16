@@ -243,8 +243,8 @@ class EtimadScraper:
                                     tender_url=tender_data['tender_url'],
                                     city=tender_data.get('city', ''),
                                     price=tender_data.get('price', ''),
-                                    created_at=datetime.datetime.utcnow(),
-                                    updated_at=datetime.datetime.utcnow()
+                                    created_at=get_saudi_now(),
+                                    updated_at=get_saudi_now()
                                 )
                                 db.session.add(new_tender)
                                 batch_new += 1
@@ -304,7 +304,7 @@ class EtimadScraper:
                 log_entry.new_tenders = new_count
                 log_entry.updated_tenders = updated_count
                 log_entry.message = f"Successfully scraped {len(tenders)} tenders. New: {new_count}, Updated: {updated_count}"
-                log_entry.end_time = datetime.datetime.utcnow()
+                log_entry.end_time = get_saudi_now()
                 db.session.commit()
                 
                 logger.info(f"Scraping completed. New tenders: {new_count}, Updated tenders: {updated_count}")
@@ -312,7 +312,7 @@ class EtimadScraper:
                 # Update log entry with zero results
                 log_entry.status = "WARNING"
                 log_entry.message = "No tenders found"
-                log_entry.end_time = datetime.datetime.utcnow()
+                log_entry.end_time = get_saudi_now()
                 db.session.commit()
                 
                 logger.warning("No tenders found")
@@ -321,7 +321,7 @@ class EtimadScraper:
             # Update log entry with error
             log_entry.status = "ERROR"
             log_entry.message = f"Error during scraping: {str(e)}"
-            log_entry.end_time = datetime.datetime.utcnow()
+            log_entry.end_time = get_saudi_now()
             db.session.commit()
             
             logger.error(f"Error during scraping: {str(e)}")
@@ -345,7 +345,7 @@ def run_scraper():
             log_entry = ScrapingLog(
                 status="ERROR",
                 message=f"Scraper job failed with error: {str(e)}",
-                end_time=datetime.datetime.utcnow()
+                end_time=get_saudi_now()
             )
             db.session.add(log_entry)
             db.session.commit()

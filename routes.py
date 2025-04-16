@@ -7,6 +7,7 @@ from scraper import run_scraper
 from sqlalchemy import desc, func
 from app import db
 import embeddings
+from utils import get_saudi_now, get_saudi_time_days_ago
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +124,7 @@ def register_routes(app):
             ).group_by(Tender.organization).order_by(desc('count')).limit(10).all()
             
             # Get tenders by date (last 30 days)
-            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+            thirty_days_ago = get_saudi_time_days_ago(30)
             tenders_by_date = db.session.query(
                 func.date(Tender.publication_date).label('date'),
                 func.count(Tender.id).label('count')

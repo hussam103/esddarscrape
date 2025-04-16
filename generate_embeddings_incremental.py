@@ -65,8 +65,8 @@ def generate_embeddings_incrementally(batch_size=DEFAULT_BATCH_SIZE, delay=DEFAU
 
 def get_unprocessed_count():
     """Get count of tenders that need embeddings"""
-    import datetime
-    now = datetime.datetime.utcnow()
+    from utils import get_saudi_now
+    now = get_saudi_now()
     
     # Count tenders that:
     # 1. Don't have an embedding yet

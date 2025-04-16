@@ -3,11 +3,23 @@
 // Global chart instances to destroy and recreate them
 let typeChart, dateChart, orgChart;
 
-// Format date for display
+// Format date for display in Saudi Arabia time (GMT+3)
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
+    
+    // Parse the date string
     const date = new Date(dateString);
-    return date.toLocaleString();
+    if (isNaN(date.getTime())) return 'N/A';
+    
+    // Format it with explicit Saudi Arabia time zone (GMT+3)
+    return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Riyadh'  // Saudi Arabia timezone
+    }).format(date);
 }
 
 // Load dashboard data

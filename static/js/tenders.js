@@ -24,19 +24,21 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeVectorSearch();
 });
 
-// Format date for display
+// Format date for display in Saudi Arabia time (GMT+3)
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
     
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return 'N/A';
     
+    // Format it with explicit Saudi Arabia time zone (GMT+3)
     return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Asia/Riyadh'  // Saudi Arabia timezone
     }).format(date);
 }
 

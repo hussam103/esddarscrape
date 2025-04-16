@@ -190,13 +190,13 @@ function initializeTendersTable() {
                         matchLabel = 'Low';
                     }
                     
-                    // Create a progress bar with color coding and match label
+                    // Create a progress bar with color coding (without match label)
                     return `
                         <div class="progress" style="height: 20px;">
                             <div class="progress-bar ${colorClass}" role="progressbar" 
                                 style="width: ${data};" aria-valuenow="${value}" 
                                 aria-valuemin="0" aria-valuemax="100">
-                                ${data} <small>(${matchLabel})</small>
+                                ${data}
                             </div>
                         </div>
                     `;

@@ -3,11 +3,12 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from flask import Flask
 from scraper import run_scraper
+import generate_embeddings_incremental
 
 logger = logging.getLogger(__name__)
 
 def init_scheduler(app: Flask):
-    """Initialize the scheduler to run the scraper 3 times a day"""
+    """Initialize the scheduler to run the scraper and embedding jobs"""
     scheduler = BackgroundScheduler()
     
     # Schedule the scraper to run at 6 AM, 2 PM, and 10 PM (UTC)
@@ -16,6 +17,16 @@ def init_scheduler(app: Flask):
         trigger=CronTrigger(hour='6,14,22', minute='0'),
         id='scraper_job',
         name='Scrape Etimad Tenders',
+        replace_existing=True
+    )
+    
+    # Schedule embeddings generation to run at 7 AM, 3 PM, and 11 PM (UTC)
+    # Run after scraper to ensure new tenders are processed
+    scheduler.add_job(
+        func=run_embeddings_with_app_context(app),
+        trigger=CronTrigger(hour='7,15,23', minute='0'),
+        id='embeddings_job',
+        name='Generate Tender Embeddings',
         replace_existing=True
     )
     
@@ -28,9 +39,21 @@ def init_scheduler(app: Flask):
         replace_existing=True
     )
     
+    # Add initial embeddings job to run 2 minutes after startup without blocking
+    # This gives time for the initial scrape to complete first
+    scheduler.add_job(
+        func=run_embeddings_with_app_context(app),
+        trigger='date',  # Run once after a delay
+        run_date=datetime.datetime.now() + datetime.timedelta(minutes=2),
+        id='initial_embeddings',
+        name='Initial Tender Embeddings Generation',
+        replace_existing=True
+    )
+    
     # Start the scheduler
     scheduler.start()
     logger.info("Scheduler started, scraper will run at 6 AM, 2 PM, and 10 PM UTC")
+    logger.info("Embeddings generator will run at 7 AM, 3 PM, and 11 PM UTC")
     logger.info("Initial scrape will run in the background after startup")
 
 def run_scraper_with_app_context(app: Flask):
@@ -38,4 +61,17 @@ def run_scraper_with_app_context(app: Flask):
     def wrapper():
         with app.app_context():
             run_scraper()
+    return wrapper
+
+
+def run_embeddings_with_app_context(app: Flask):
+    """Return a function that runs the embeddings generator within the app context"""
+    def wrapper():
+        with app.app_context():
+            # Process 3 batches of 50 tenders each, with a 5-second delay between batches
+            generate_embeddings_incremental.generate_embeddings_incrementally(
+                batch_size=50,
+                delay=5,
+                max_batches=3
+            )
     return wrapper

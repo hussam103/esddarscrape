@@ -100,8 +100,8 @@ function initializeTendersTable() {
         paging: true,
         ordering: false,  // Disable client-side sorting as we'll use server-side sorting
         searching: false,  // We handle search via our own filters
-        lengthMenu: [[25, 50, 100, 300], [25, 50, 100, 300]],
-        pageLength: 100,
+        lengthMenu: [[25, 50, 100, 300], [25, 50, 100, "All 300"]],
+        pageLength: 300,
         language: {
             processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
             emptyTable: 'No tenders found'

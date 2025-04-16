@@ -19,14 +19,19 @@ def init_scheduler(app: Flask):
         replace_existing=True
     )
     
+    # Add initial scrape job to run immediately after startup without blocking
+    scheduler.add_job(
+        func=run_scraper_with_app_context(app),
+        trigger='date',  # Run once immediately
+        id='initial_scrape',
+        name='Initial Etimad Tenders Scrape',
+        replace_existing=True
+    )
+    
     # Start the scheduler
     scheduler.start()
     logger.info("Scheduler started, scraper will run at 6 AM, 2 PM, and 10 PM UTC")
-    
-    # Run the scraper once at startup to populate the database
-    logger.info("Running initial scrape at startup")
-    with app.app_context():
-        run_scraper()
+    logger.info("Initial scrape will run in the background after startup")
 
 def run_scraper_with_app_context(app: Flask):
     """Return a function that runs the scraper within the app context"""

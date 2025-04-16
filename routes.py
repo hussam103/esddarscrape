@@ -1,10 +1,11 @@
 import logging
 from datetime import datetime, timedelta
 from flask import render_template, jsonify, request
-from models import Tender, ScrapingLog
+from models import Tender, ScrapingLog, TenderEmbedding
 from scraper import run_scraper
 from sqlalchemy import desc, func
 from app import db
+import embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -200,4 +201,115 @@ def register_routes(app):
             return jsonify(result)
         except Exception as e:
             logger.error(f"Error fetching logs: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+            
+    @app.route('/api/vector-search')
+    def api_vector_search():
+        """Vector search API using OpenAI embeddings"""
+        try:
+            query = request.args.get('query', '')
+            limit = request.args.get('limit', 10, type=int)
+            
+            if not query:
+                return jsonify({'error': 'Query parameter is required'}), 400
+                
+            # Perform vector search
+            results = embeddings.search_similar_tenders(query, limit)
+            
+            return jsonify({
+                'query': query,
+                'results': results,
+                'count': len(results)
+            })
+        except Exception as e:
+            logger.error(f"Error during vector search: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+            
+    @app.route('/api/embeddings/stats')
+    def api_embeddings_stats():
+        """Get statistics about the embeddings"""
+        try:
+            # Count total embeddings
+            total_embeddings = TenderEmbedding.query.count()
+            
+            # Count tenders with and without embeddings
+            total_tenders = Tender.query.count()
+            tenders_with_embeddings = db.session.query(Tender).join(
+                TenderEmbedding, 
+                Tender.tender_id == TenderEmbedding.tender_id
+            ).count()
+            
+            # Count tenders with future submission deadlines
+            now = datetime.utcnow()
+            future_tenders = Tender.query.filter(
+                (Tender.submission_deadline.is_(None)) | (Tender.submission_deadline > now)
+            ).count()
+            
+            # Count tenders that need embeddings
+            tenders_needing_embeddings = db.session.query(Tender).outerjoin(
+                TenderEmbedding, 
+                Tender.tender_id == TenderEmbedding.tender_id
+            ).filter(
+                TenderEmbedding.id.is_(None)
+            ).filter(
+                (Tender.submission_deadline.is_(None)) | (Tender.submission_deadline > now)
+            ).count()
+            
+            return jsonify({
+                'total_embeddings': total_embeddings,
+                'total_tenders': total_tenders,
+                'tenders_with_embeddings': tenders_with_embeddings,
+                'tenders_without_embeddings': total_tenders - tenders_with_embeddings,
+                'future_tenders': future_tenders,
+                'tenders_needing_embeddings': tenders_needing_embeddings
+            })
+        except Exception as e:
+            logger.error(f"Error fetching embedding stats: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+            
+    @app.route('/api/embeddings/generate', methods=['POST'])
+    def api_generate_embeddings():
+        """API endpoint to generate embeddings for tenders that don't have them"""
+        try:
+            # Only generate for tenders without embeddings and with future deadlines
+            embeddings.cleanup_expired_embeddings()
+            
+            # Get the count before generating
+            now = datetime.utcnow()
+            count_before = db.session.query(Tender).outerjoin(
+                TenderEmbedding, 
+                Tender.tender_id == TenderEmbedding.tender_id
+            ).filter(
+                TenderEmbedding.id.is_(None)
+            ).filter(
+                (Tender.submission_deadline.is_(None)) | (Tender.submission_deadline > now)
+            ).count()
+            
+            # Generate embeddings for up to 50 tenders to avoid timeouts
+            limit = request.json.get('limit', 50) if request.is_json else 50
+            
+            # Find tenders without embeddings
+            tenders = db.session.query(Tender).outerjoin(
+                TenderEmbedding, 
+                Tender.tender_id == TenderEmbedding.tender_id
+            ).filter(
+                TenderEmbedding.id.is_(None)
+            ).filter(
+                (Tender.submission_deadline.is_(None)) | (Tender.submission_deadline > now)
+            ).limit(limit).all()
+            
+            # Generate embeddings
+            created_count = 0
+            for tender in tenders:
+                if embeddings.embed_tender(tender):
+                    created_count += 1
+            
+            return jsonify({
+                'message': f'Generated {created_count} embeddings',
+                'count_before': count_before,
+                'count_after': count_before - created_count,
+                'created': created_count
+            })
+        except Exception as e:
+            logger.error(f"Error generating embeddings: {str(e)}")
             return jsonify({'error': str(e)}), 500

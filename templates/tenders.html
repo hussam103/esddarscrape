@@ -23,37 +23,95 @@
 {% block content %}
 <h1 class="mb-4">Tenders</h1>
 
-<div class="filter-section mb-4">
-    <div class="row">
-        <div class="col-md-3 mb-3">
-            <label for="organization-filter" class="form-label">Organization</label>
-            <select id="organization-filter" class="form-select">
-                <option value="">All Organizations</option>
-            </select>
-        </div>
-        <div class="col-md-3 mb-3">
-            <label for="type-filter" class="form-label">Tender Type</label>
-            <select id="type-filter" class="form-select">
-                <option value="">All Types</option>
-            </select>
-        </div>
-        <div class="col-md-3 mb-3">
-            <label for="date-from" class="form-label">From Date</label>
-            <input type="date" id="date-from" class="form-control">
-        </div>
-        <div class="col-md-3 mb-3">
-            <label for="date-to" class="form-label">To Date</label>
-            <input type="date" id="date-to" class="form-control">
-        </div>
+<div class="card mb-4">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="searchTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="filter-tab" data-bs-toggle="tab" data-bs-target="#filter-tab-pane" type="button" role="tab" aria-controls="filter-tab-pane" aria-selected="true">Filter Search</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="vector-tab" data-bs-toggle="tab" data-bs-target="#vector-tab-pane" type="button" role="tab" aria-controls="vector-tab-pane" aria-selected="false">AI Semantic Search</button>
+            </li>
+        </ul>
     </div>
-    <div class="row mt-2">
-        <div class="col-md-6 mb-3">
-            <label for="search-filter" class="form-label">Search</label>
-            <input type="text" id="search-filter" class="form-control" placeholder="Search tenders...">
-        </div>
-        <div class="col-md-6 d-flex align-items-end justify-content-end">
-            <button id="apply-filters" class="btn btn-primary me-2">Apply Filters</button>
-            <button id="reset-filters" class="btn btn-secondary">Reset</button>
+    <div class="card-body">
+        <div class="tab-content" id="searchTabContent">
+            <!-- Regular Filter Search -->
+            <div class="tab-pane fade show active" id="filter-tab-pane" role="tabpanel" aria-labelledby="filter-tab" tabindex="0">
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="organization-filter" class="form-label">Organization</label>
+                            <select id="organization-filter" class="form-select">
+                                <option value="">All Organizations</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="type-filter" class="form-label">Tender Type</label>
+                            <select id="type-filter" class="form-select">
+                                <option value="">All Types</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="date-from" class="form-label">From Date</label>
+                            <input type="date" id="date-from" class="form-control">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="date-to" class="form-label">To Date</label>
+                            <input type="date" id="date-to" class="form-control">
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6 mb-3">
+                            <label for="search-filter" class="form-label">Search</label>
+                            <input type="text" id="search-filter" class="form-control" placeholder="Search tenders...">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end justify-content-end">
+                            <button id="apply-filters" class="btn btn-primary me-2">Apply Filters</button>
+                            <button id="reset-filters" class="btn btn-secondary">Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vector Search Tab -->
+            <div class="tab-pane fade" id="vector-tab-pane" role="tabpanel" aria-labelledby="vector-tab" tabindex="0">
+                <div class="vector-search-section">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Semantic search uses AI to understand the meaning behind your query and find similar tenders, even if they don't contain the exact words you searched for.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-10 mb-3">
+                            <label for="vector-query" class="form-label">Describe what you're looking for</label>
+                            <input type="text" id="vector-query" class="form-control" placeholder="Example: 'IT services for government healthcare system' or 'Construction of residential buildings'">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="limit" class="form-label">Result Limit</label>
+                            <select id="vector-limit" class="form-select">
+                                <option value="5">Top 5</option>
+                                <option value="10" selected>Top 10</option>
+                                <option value="20">Top 20</option>
+                                <option value="50">Top 50</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6 mb-3">
+                            <div id="vector-status"></div>
+                            <div id="vector-embeddings-stats"></div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end justify-content-end">
+                            <button id="generate-embeddings" class="btn btn-secondary me-2">Generate Embeddings</button>
+                            <button id="run-vector-search" class="btn btn-primary">Search</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize tender details modal
     initializeTenderDetailsModal();
+    
+    // Initialize vector search functionality
+    initializeVectorSearch();
 });
 
 // Format date for display

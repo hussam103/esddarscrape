@@ -175,7 +175,7 @@ def search_similar_tenders(query_text, limit=10, today_only=False):
     Args:
         query_text (str): Text to search for
         limit (int, optional): Maximum number of results. Defaults to 10.
-        today_only (bool, optional): If True, only search in tenders published today. Defaults to False.
+        today_only (bool, optional): If True, only search in tenders published in the last 24 hours. Defaults to False.
     
     Returns:
         list: List of tenders sorted by similarity
@@ -200,11 +200,11 @@ def search_similar_tenders(query_text, limit=10, today_only=False):
         (Tender.submission_deadline.is_(None)) | (Tender.submission_deadline > now)
     )
     
-    # If today_only is True, filter to only show tenders published today
+    # If today_only is True, filter to only show tenders published in the last 24 hours
     if today_only:
-        # Get the start of today
-        today_start = datetime.datetime.combine(now.date(), datetime.time.min)
-        query = query.filter(Tender.publication_date >= today_start)
+        # Calculate the timestamp for 24 hours ago
+        last_24_hours = now - datetime.timedelta(hours=24)
+        query = query.filter(Tender.publication_date >= last_24_hours)
     
     # Order by similarity and limit results
     results = query.order_by('distance').limit(limit).all()

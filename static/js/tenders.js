@@ -466,13 +466,13 @@ function performVectorSearch() {
                 // Show success message with filter information
                 let successMessage = `Found ${result.results.length} matching tenders`;
                 if (result.today_only) {
-                    successMessage += ' (from today only)';
+                    successMessage += ' (from the last 24 hours only)';
                 }
                 statusContainer.innerHTML = `<div class="alert alert-success">${successMessage}</div>`;
             } else {
                 let warningMessage = 'No matching tenders found.';
                 if (result.today_only) {
-                    warningMessage += ' Try disabling the "Today\'s tenders only" filter or use a different query.';
+                    warningMessage += ' Try disabling the "Last 24 hours only" filter or use a different query.';
                 } else {
                     warningMessage += ' Try a different query.';
                 }

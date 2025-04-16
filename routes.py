@@ -246,7 +246,7 @@ def register_routes(app):
             ).count()
             
             # Count tenders with future submission deadlines
-            now = datetime.utcnow()
+            now = get_saudi_now()
             future_tenders = Tender.query.filter(
                 (Tender.submission_deadline.is_(None)) | (Tender.submission_deadline > now)
             ).count()
@@ -281,7 +281,7 @@ def register_routes(app):
             embeddings.cleanup_expired_embeddings()
             
             # Get the count before generating
-            now = datetime.utcnow()
+            now = get_saudi_now()
             count_before = db.session.query(Tender).outerjoin(
                 TenderEmbedding, 
                 Tender.tender_id == TenderEmbedding.tender_id

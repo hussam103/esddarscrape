@@ -1,6 +1,7 @@
 import datetime
 from app import db
 from pgvector.sqlalchemy import Vector
+from utils import get_saudi_now
 
 class Tender(db.Model):
     __tablename__ = 'tenders'
@@ -21,8 +22,8 @@ class Tender(db.Model):
     # Additional fields for new data structure
     city = db.Column(db.String(255), nullable=True)
     price = db.Column(db.String(255), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_saudi_now)
+    updated_at = db.Column(db.DateTime, default=get_saudi_now, onupdate=get_saudi_now)
     
     def to_dict(self):
         return {
@@ -61,7 +62,7 @@ class TenderEmbedding(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tender_id = db.Column(db.String(255), db.ForeignKey('tenders.tender_id', ondelete='CASCADE'), nullable=False, unique=True)
     embedding = db.Column(Vector(3072))  # 3072 dimensions for text-embedding-3-large
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_saudi_now)
     
     # Relationship to the tender
     tender = db.relationship('Tender', foreign_keys=[tender_id], backref=db.backref('embedding_rel', uselist=False, cascade='all, delete-orphan'))
@@ -73,7 +74,7 @@ class ScrapingLog(db.Model):
     __tablename__ = 'scraping_logs'
     
     id = db.Column(db.Integer, primary_key=True)
-    start_time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    start_time = db.Column(db.DateTime, default=get_saudi_now)
     end_time = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(50), nullable=False, default='RUNNING')  # RUNNING, SUCCESS, ERROR
     message = db.Column(db.Text, nullable=True)

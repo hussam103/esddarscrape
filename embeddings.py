@@ -9,6 +9,7 @@ import numpy as np
 from openai import OpenAI
 from app import db
 from models import Tender, TenderEmbedding
+from utils import get_saudi_now, get_saudi_time_hours_ago
 
 # The newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # Do not change this unless explicitly requested by the user
@@ -82,7 +83,7 @@ def batch_embed_tenders(limit=None):
     Returns:
         int: Number of tenders successfully embedded
     """
-    now = datetime.datetime.utcnow()
+    now = get_saudi_now()
     
     # Find all tenders that:
     # 1. Don't have an embedding yet
@@ -145,7 +146,7 @@ def batch_embed_tenders(limit=None):
 
 def cleanup_expired_embeddings():
     """Remove embeddings for tenders with passed submission deadlines"""
-    now = datetime.datetime.utcnow()
+    now = get_saudi_now()
     
     # Find embeddings for tenders with passed deadlines
     expired_embeddings = db.session.query(TenderEmbedding).join(
@@ -184,7 +185,7 @@ def search_similar_tenders(query_text, limit=10, today_only=False):
     query_embedding = create_embedding(query_text)
     
     # Get current date for filtering
-    now = datetime.datetime.utcnow()
+    now = get_saudi_now()
     
     # Base query
     query = db.session.query(
@@ -203,7 +204,7 @@ def search_similar_tenders(query_text, limit=10, today_only=False):
     # If today_only is True, filter to only show tenders published in the last 24 hours
     if today_only:
         # Calculate the timestamp for 24 hours ago
-        last_24_hours = now - datetime.timedelta(hours=24)
+        last_24_hours = get_saudi_time_hours_ago(24)
         query = query.filter(Tender.publication_date >= last_24_hours)
     
     # Order by similarity and limit results

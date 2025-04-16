@@ -10,6 +10,7 @@ import time
 import datetime
 from models import Tender, ScrapingLog
 from app import db
+from utils import get_saudi_now
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -223,7 +224,7 @@ class EtimadScraper:
                                 existing_tender.tender_url = tender_data['tender_url']
                                 existing_tender.city = tender_data.get('city', '')
                                 existing_tender.price = tender_data.get('price', '')
-                                existing_tender.updated_at = datetime.datetime.utcnow()
+                                existing_tender.updated_at = get_saudi_now()
                                 batch_updated += 1
                             else:
                                 # Create new tender

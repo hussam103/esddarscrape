@@ -1,11 +1,13 @@
 import logging
 import datetime
+import pytz
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from flask import Flask
 from scraper import run_scraper
 import generate_embeddings_incremental
 from embeddings import cleanup_expired_embeddings
+from utils import get_saudi_now, SAUDI_TIMEZONE
 
 logger = logging.getLogger(__name__)
 
@@ -13,20 +15,22 @@ def init_scheduler(app: Flask):
     """Initialize the scheduler to run the scraper and embedding jobs"""
     scheduler = BackgroundScheduler()
     
-    # Schedule the scraper to run at 6 AM, 2 PM, and 10 PM (UTC)
+    # Schedule the scraper to run at 9 AM, 5 PM, and 1 AM (Saudi Arabia time, GMT+3)
+    # This is equivalent to 6 AM, 2 PM, and 10 PM UTC
     scheduler.add_job(
         func=run_scraper_with_app_context(app),
-        trigger=CronTrigger(hour='6,14,22', minute='0'),
+        trigger=CronTrigger(hour='9,17,1', minute='0', timezone=SAUDI_TIMEZONE),
         id='scraper_job',
         name='Scrape Etimad Tenders',
         replace_existing=True
     )
     
-    # Schedule embeddings generation to run at 7 AM, 3 PM, and 11 PM (UTC)
+    # Schedule embeddings generation to run at 10 AM, 6 PM, and 2 AM (Saudi Arabia time, GMT+3)
+    # This is equivalent to 7 AM, 3 PM, and 11 PM UTC
     # Run after scraper to ensure new tenders are processed
     scheduler.add_job(
         func=run_embeddings_with_app_context(app),
-        trigger=CronTrigger(hour='7,15,23', minute='0'),
+        trigger=CronTrigger(hour='10,18,2', minute='0', timezone=SAUDI_TIMEZONE),
         id='embeddings_job',
         name='Generate Tender Embeddings',
         replace_existing=True
@@ -46,16 +50,17 @@ def init_scheduler(app: Flask):
     scheduler.add_job(
         func=run_embeddings_with_app_context(app),
         trigger='date',  # Run once after a delay
-        run_date=datetime.datetime.now() + datetime.timedelta(minutes=2),
+        run_date=get_saudi_now() + datetime.timedelta(minutes=2),
         id='initial_embeddings',
         name='Initial Tender Embeddings Generation',
         replace_existing=True
     )
     
-    # Schedule cleanup of expired embeddings to run daily at 5 AM UTC
+    # Schedule cleanup of expired embeddings to run daily at 8 AM (Saudi Arabia time, GMT+3)
+    # This is equivalent to 5 AM UTC
     scheduler.add_job(
         func=run_cleanup_with_app_context(app),
-        trigger=CronTrigger(hour='5', minute='0'),
+        trigger=CronTrigger(hour='8', minute='0', timezone=SAUDI_TIMEZONE),
         id='cleanup_job',
         name='Clean Up Expired Embeddings',
         replace_existing=True
@@ -65,7 +70,7 @@ def init_scheduler(app: Flask):
     scheduler.add_job(
         func=run_cleanup_with_app_context(app),
         trigger='date',  # Run once after a delay
-        run_date=datetime.datetime.now() + datetime.timedelta(minutes=1),
+        run_date=get_saudi_now() + datetime.timedelta(minutes=1),
         id='initial_cleanup',
         name='Initial Expired Embeddings Cleanup',
         replace_existing=True
@@ -73,9 +78,9 @@ def init_scheduler(app: Flask):
     
     # Start the scheduler
     scheduler.start()
-    logger.info("Scheduler started, scraper will run at 6 AM, 2 PM, and 10 PM UTC")
-    logger.info("Embeddings generator will run at 7 AM, 3 PM, and 11 PM UTC")
-    logger.info("Expired embeddings cleanup will run daily at 5 AM UTC")
+    logger.info("Scheduler started, scraper will run at 9 AM, 5 PM, and 1 AM (Saudi Arabia time, GMT+3)")
+    logger.info("Embeddings generator will run at 10 AM, 6 PM, and 2 AM (Saudi Arabia time, GMT+3)")
+    logger.info("Expired embeddings cleanup will run daily at 8 AM (Saudi Arabia time, GMT+3)")
     logger.info("Initial scrape will run in the background after startup")
 
 def run_scraper_with_app_context(app: Flask):

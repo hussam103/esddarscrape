@@ -162,13 +162,41 @@ function initializeTendersTable() {
                     // Extract the percentage value without the % sign
                     const value = parseFloat(data);
                     
-                    // Create a progress bar based on the match score
+                    // Determine appropriate color based on match score
+                    let colorClass = 'bg-secondary';
+                    if (value >= 95) {
+                        colorClass = 'bg-success'; // Excellent match: green
+                    } else if (value >= 85) {
+                        colorClass = 'bg-info';    // Good match: blue
+                    } else if (value >= 75) {
+                        colorClass = 'bg-primary'; // Moderate match: primary blue
+                    } else if (value >= 65) {
+                        colorClass = 'bg-warning'; // Fair match: yellow/orange
+                    } else {
+                        colorClass = 'bg-danger';  // Poor match: red
+                    }
+                    
+                    // Add a match qualifier label
+                    let matchLabel = '';
+                    if (value >= 95) {
+                        matchLabel = 'Excellent';
+                    } else if (value >= 85) {
+                        matchLabel = 'Very Good';
+                    } else if (value >= 75) {
+                        matchLabel = 'Good';
+                    } else if (value >= 65) {
+                        matchLabel = 'Fair';
+                    } else {
+                        matchLabel = 'Low';
+                    }
+                    
+                    // Create a progress bar with color coding and match label
                     return `
                         <div class="progress" style="height: 20px;">
-                            <div class="progress-bar bg-success" role="progressbar" 
+                            <div class="progress-bar ${colorClass}" role="progressbar" 
                                 style="width: ${data};" aria-valuenow="${value}" 
                                 aria-valuemin="0" aria-valuemax="100">
-                                ${data}
+                                ${data} <small>(${matchLabel})</small>
                             </div>
                         </div>
                     `;
@@ -459,9 +487,36 @@ function updateTableWithVectorResults() {
         // Create a new object with tender data plus similarity score
         const tenderWithScore = {...item.tender};
         
-        // Add similarity score (convert to percentage and round to 2 decimal places)
-        const similarityPercent = (item.similarity * 100).toFixed(2);
-        tenderWithScore.similarity_score = `${similarityPercent}%`;
+        // Add buffered similarity score (convert to more intuitive percentage range)
+        // Buffer the similarity score to get values like 95%, 85%, 70%, etc.
+        const rawScore = item.similarity;
+        
+        // Apply exponential buffering to raw scores (typically between 0.7-0.99)
+        // This transforms the raw score to a more intuitive 60-95% range
+        let bufferedScore;
+        if (rawScore >= 0.95) {
+            bufferedScore = 98; // Exceptional match
+        } else if (rawScore >= 0.9) {
+            bufferedScore = 95; // Excellent match
+        } else if (rawScore >= 0.85) {
+            bufferedScore = 90; // Very good match
+        } else if (rawScore >= 0.8) {
+            bufferedScore = 85; // Good match
+        } else if (rawScore >= 0.75) {
+            bufferedScore = 80; // Relevant match
+        } else if (rawScore >= 0.7) {
+            bufferedScore = 75; // Moderately relevant
+        } else if (rawScore >= 0.65) {
+            bufferedScore = 70; // Somewhat relevant
+        } else if (rawScore >= 0.6) {
+            bufferedScore = 65; // Slightly relevant
+        } else {
+            bufferedScore = 60; // Low relevance
+        }
+        
+        tenderWithScore.similarity_score = `${bufferedScore}%`;
+        // Store the raw score for debugging/sorting
+        tenderWithScore.raw_similarity = rawScore;
         
         return tenderWithScore;
     });

@@ -495,3 +495,51 @@ function updateTableWithVectorResults() {
     tendersTable.rows.add(flattenedResults);
     tendersTable.draw();
 }
+
+// Regenerate all embeddings with new text structure (title + organization + main activities)
+function regenerateAllEmbeddings() {
+    const button = document.getElementById('regenerate-all-embeddings');
+    const statusContainer = document.getElementById('vector-status');
+    
+    // Show confirmation dialog
+    if (!confirm('This will delete and regenerate ALL vector embeddings with the updated text structure (title + organization + main activities). This operation cannot be undone and may take some time. Continue?')) {
+        return;
+    }
+    
+    // Disable button during regeneration
+    button.setAttribute('disabled', 'disabled');
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Regenerating...';
+    
+    statusContainer.innerHTML = '<div class="alert alert-info">Regenerating all embeddings with updated structure (title + organization + main activities). This may take some time...</div>';
+    
+    fetch('/api/embeddings/regenerate-all', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(result => {
+            statusContainer.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+            
+            // Re-enable button after 5 seconds
+            setTimeout(() => {
+                button.removeAttribute('disabled');
+                button.innerHTML = 'Regenerate All';
+                loadEmbeddingsStats(); // Refresh stats
+            }, 5000);
+        })
+        .catch(error => {
+            console.error('Error regenerating embeddings:', error);
+            statusContainer.innerHTML = '<div class="alert alert-danger">Error regenerating embeddings. Please try again later.</div>';
+            
+            // Re-enable button
+            button.removeAttribute('disabled');
+            button.innerHTML = 'Regenerate All';
+        });
+}

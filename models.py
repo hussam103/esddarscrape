@@ -1,5 +1,6 @@
 import datetime
 from app import db
+from pgvector.sqlalchemy import Vector
 
 class Tender(db.Model):
     __tablename__ = 'tenders'
@@ -43,6 +44,29 @@ class Tender(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+        
+    def get_text_for_embedding(self):
+        """Get the text that will be used for embedding"""
+        title = self.tender_title or ""
+        org = self.organization or ""
+        # Combine title and organization for better semantic search
+        return f"{title} {org}"
+
+
+class TenderEmbedding(db.Model):
+    """Store vector embeddings for tenders"""
+    __tablename__ = 'tender_embeddings'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tender_id = db.Column(db.String(255), db.ForeignKey('tenders.tender_id', ondelete='CASCADE'), nullable=False, unique=True)
+    embedding = db.Column(Vector(3072))  # 3072 dimensions for text-embedding-3-large
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    
+    # Relationship to the tender
+    tender = db.relationship('Tender', foreign_keys=[tender_id], backref=db.backref('embedding_rel', uselist=False, cascade='all, delete-orphan'))
+    
+    def __repr__(self):
+        return f"<TenderEmbedding {self.tender_id}>"
 
 class ScrapingLog(db.Model):
     __tablename__ = 'scraping_logs'

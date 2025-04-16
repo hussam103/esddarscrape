@@ -197,9 +197,20 @@ class EtimadScraper:
                     # Process each tender in the current batch
                     for tender_data in batch:
                         try:
-                            # Check if tender already exists
-                            existing_tender = Tender.query.filter_by(tender_id=tender_data['tender_id']).first()
-                            
+                            # Check if tender already exists, with better error handling for encoding issues
+                            try:
+                                tender_id = tender_data['tender_id']
+                                # Ensure tender_id is a clean ASCII string to avoid encoding issues
+                                if not isinstance(tender_id, str):
+                                    tender_id = str(tender_id)
+                                # Remove any potential problematic characters
+                                tender_id = ''.join(c for c in tender_id if c.isalnum() or c in '-_')
+                                
+                                existing_tender = Tender.query.filter_by(tender_id=tender_id).first()
+                            except Exception as filter_error:
+                                logger.error(f"Error filtering tender: {str(filter_error)}")
+                                continue
+                                
                             if existing_tender:
                                 # Update existing tender
                                 existing_tender.tender_title = tender_data['tender_title']
@@ -227,9 +238,9 @@ class EtimadScraper:
                                 existing_tender.updated_at = get_saudi_now()
                                 batch_updated += 1
                             else:
-                                # Create new tender
+                                # Create new tender with sanitized tender_id
                                 new_tender = Tender(
-                                    tender_id=tender_data['tender_id'],
+                                    tender_id=tender_id,  # Use the sanitized tender_id
                                     tender_title=tender_data['tender_title'],
                                     organization=tender_data['organization'],
                                     tender_type=tender_data['tender_type'],

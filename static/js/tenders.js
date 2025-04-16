@@ -154,6 +154,26 @@ function initializeTendersTable() {
                     return formatDate(data);
                 }
             },
+            { 
+                data: 'similarity_score',
+                render: function(data) {
+                    if (!data) return '';
+                    
+                    // Extract the percentage value without the % sign
+                    const value = parseFloat(data);
+                    
+                    // Create a progress bar based on the match score
+                    return `
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                style="width: ${data};" aria-valuenow="${value}" 
+                                aria-valuemin="0" aria-valuemax="100">
+                                ${data}
+                            </div>
+                        </div>
+                    `;
+                }
+            },
             {
                 data: null,
                 render: function(data, type, row) {
@@ -433,12 +453,17 @@ function updateTableWithVectorResults() {
     // Clear the table
     tendersTable.clear();
     
-    // Extract the tender objects from the vector search results
+    // Extract the tender objects from the vector search results and add similarity scores
     // Vector search returns objects with {tender: {...}, similarity: 0.95} structure
-    // But DataTables expects flat objects, so we need to extract the tender properties
     const flattenedResults = vectorSearchResults.map(item => {
-        // Return the tender object directly from the vector search result
-        return item.tender;
+        // Create a new object with tender data plus similarity score
+        const tenderWithScore = {...item.tender};
+        
+        // Add similarity score (convert to percentage and round to 2 decimal places)
+        const similarityPercent = (item.similarity * 100).toFixed(2);
+        tenderWithScore.similarity_score = `${similarityPercent}%`;
+        
+        return tenderWithScore;
     });
     
     // Add the flattened results to the table

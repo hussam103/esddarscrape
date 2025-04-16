@@ -430,7 +430,6 @@ function generateEmbeddings() {
 function performVectorSearch() {
     const query = document.getElementById('vector-query').value.trim();
     const limit = document.getElementById('vector-limit').value;
-    const timeFilter = document.getElementById('vector-time-filter').value;
     const statusContainer = document.getElementById('vector-status');
     
     if (!query) {
@@ -440,16 +439,8 @@ function performVectorSearch() {
     
     statusContainer.innerHTML = '<div class="alert alert-info"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Searching...</div>';
     
-    // Build the URL with query parameters
-    let searchUrl = `/api/vector-search?query=${encodeURIComponent(query)}&limit=${limit}`;
-    
-    // Add time filter if not set to "all"
-    if (timeFilter !== 'all') {
-        searchUrl += `&time_filter=${timeFilter}`;
-    }
-    
     // Perform vector search
-    fetch(searchUrl)
+    fetch(`/api/vector-search?query=${encodeURIComponent(query)}&limit=${limit}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -465,38 +456,10 @@ function performVectorSearch() {
                 document.getElementById('filter-tab').classList.remove('active');
                 document.getElementById('filter-tab-pane').classList.remove('show', 'active');
                 
-                // Show success message with time filter info if applicable
-                let timeFilterText = '';
-                if (timeFilter !== 'all') {
-                    if (timeFilter === 'today') {
-                        timeFilterText = ' added today';
-                    } else if (timeFilter === '24h') {
-                        timeFilterText = ' added in the last 24 hours';
-                    } else if (timeFilter === '7d') {
-                        timeFilterText = ' added in the last 7 days';
-                    } else if (timeFilter === '30d') {
-                        timeFilterText = ' added in the last 30 days';
-                    }
-                }
-                
-                statusContainer.innerHTML = `<div class="alert alert-success">Found ${result.results.length} matching tenders${timeFilterText}</div>`;
+                // Show success message
+                statusContainer.innerHTML = `<div class="alert alert-success">Found ${result.results.length} matching tenders</div>`;
             } else {
-                // Show specific message for time-filtered searches with no results
-                if (timeFilter !== 'all') {
-                    let timeFilterText = '';
-                    if (timeFilter === 'today') {
-                        timeFilterText = 'added today';
-                    } else if (timeFilter === '24h') {
-                        timeFilterText = 'in the last 24 hours';
-                    } else if (timeFilter === '7d') {
-                        timeFilterText = 'in the last 7 days';
-                    } else if (timeFilter === '30d') {
-                        timeFilterText = 'in the last 30 days';
-                    }
-                    statusContainer.innerHTML = `<div class="alert alert-warning">No matching tenders found ${timeFilterText}. Try a different time range or search query.</div>`;
-                } else {
-                    statusContainer.innerHTML = '<div class="alert alert-warning">No matching tenders found. Try a different query.</div>';
-                }
+                statusContainer.innerHTML = '<div class="alert alert-warning">No matching tenders found. Try a different query.</div>';
             }
         })
         .catch(error => {

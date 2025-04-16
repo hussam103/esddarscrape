@@ -169,14 +169,12 @@ def cleanup_expired_embeddings():
     logger.info(f"Removed {count} expired embeddings")
     return count
 
-def search_similar_tenders(query_text, limit=10, time_threshold=None):
-    """Search for tenders similar to the query text with optional time filter
+def search_similar_tenders(query_text, limit=10):
+    """Search for tenders similar to the query text
     
     Args:
         query_text (str): Text to search for
         limit (int, optional): Maximum number of results. Defaults to 10.
-        time_threshold (datetime, optional): If provided, only returns tenders created
-                                           after this datetime. Defaults to None.
     
     Returns:
         list: List of tenders sorted by similarity
@@ -187,8 +185,8 @@ def search_similar_tenders(query_text, limit=10, time_threshold=None):
     # Get current date for filtering out passed tenders
     now = datetime.datetime.utcnow()
     
-    # Build the query
-    query = db.session.query(
+    # Search for similar tenders excluding those with passed submission dates
+    results = db.session.query(
         Tender, 
         TenderEmbedding.embedding.cosine_distance(query_embedding).label('distance')
     ).join(
@@ -196,14 +194,9 @@ def search_similar_tenders(query_text, limit=10, time_threshold=None):
         Tender.tender_id == TenderEmbedding.tender_id
     ).filter(
         (Tender.submission_deadline.is_(None)) | (Tender.submission_deadline > now)
-    )
-    
-    # Apply time filter if provided
-    if time_threshold:
-        query = query.filter(Tender.created_at >= time_threshold)
-    
-    # Get the results
-    results = query.order_by('distance').limit(limit).all()
+    ).order_by(
+        'distance'
+    ).limit(limit).all()
     
     # Extract tenders from results
     tenders = [{"tender": r[0].to_dict(), "similarity": 1 - r[1]} for r in results]

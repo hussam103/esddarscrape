@@ -430,6 +430,7 @@ function generateEmbeddings() {
 function performVectorSearch() {
     const query = document.getElementById('vector-query').value.trim();
     const limit = document.getElementById('vector-limit').value;
+    const todayOnly = document.getElementById('today-only-check').checked;
     const statusContainer = document.getElementById('vector-status');
     
     if (!query) {
@@ -439,8 +440,14 @@ function performVectorSearch() {
     
     statusContainer.innerHTML = '<div class="alert alert-info"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Searching...</div>';
     
-    // Perform vector search
-    fetch(`/api/vector-search?query=${encodeURIComponent(query)}&limit=${limit}`)
+    // Perform vector search with optional today_only filter
+    const searchParams = new URLSearchParams({
+        query: query,
+        limit: limit,
+        today_only: todayOnly
+    });
+    
+    fetch(`/api/vector-search?${searchParams}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -456,10 +463,20 @@ function performVectorSearch() {
                 document.getElementById('filter-tab').classList.remove('active');
                 document.getElementById('filter-tab-pane').classList.remove('show', 'active');
                 
-                // Show success message
-                statusContainer.innerHTML = `<div class="alert alert-success">Found ${result.results.length} matching tenders</div>`;
+                // Show success message with filter information
+                let successMessage = `Found ${result.results.length} matching tenders`;
+                if (result.today_only) {
+                    successMessage += ' (from today only)';
+                }
+                statusContainer.innerHTML = `<div class="alert alert-success">${successMessage}</div>`;
             } else {
-                statusContainer.innerHTML = '<div class="alert alert-warning">No matching tenders found. Try a different query.</div>';
+                let warningMessage = 'No matching tenders found.';
+                if (result.today_only) {
+                    warningMessage += ' Try disabling the "Today\'s tenders only" filter or use a different query.';
+                } else {
+                    warningMessage += ' Try a different query.';
+                }
+                statusContainer.innerHTML = `<div class="alert alert-warning">${warningMessage}</div>`;
             }
         })
         .catch(error => {

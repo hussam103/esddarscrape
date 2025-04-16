@@ -210,17 +210,19 @@ def register_routes(app):
         try:
             query = request.args.get('query', '')
             limit = request.args.get('limit', 10, type=int)
+            today_only = request.args.get('today_only', 'false').lower() == 'true'
             
             if not query:
                 return jsonify({'error': 'Query parameter is required'}), 400
                 
             # Perform vector search
-            results = embeddings.search_similar_tenders(query, limit)
+            results = embeddings.search_similar_tenders(query, limit, today_only=today_only)
             
             return jsonify({
                 'query': query,
                 'results': results,
-                'count': len(results)
+                'count': len(results),
+                'today_only': today_only
             })
         except Exception as e:
             logger.error(f"Error during vector search: {str(e)}")

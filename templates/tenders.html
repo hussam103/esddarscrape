@@ -86,18 +86,27 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-10 mb-3">
+                        <div class="col-md-8 mb-3">
                             <label for="vector-query" class="form-label">Describe what you're looking for</label>
                             <input type="text" id="vector-query" class="form-control" placeholder="Example: 'IT services for government healthcare system' or 'Construction of residential buildings'">
                         </div>
                         <div class="col-md-2 mb-3">
-                            <label for="limit" class="form-label">Result Limit</label>
+                            <label for="vector-limit" class="form-label">Result Limit</label>
                             <select id="vector-limit" class="form-select">
                                 <option value="5">Top 5</option>
                                 <option value="10" selected>Top 10</option>
                                 <option value="20">Top 20</option>
                                 <option value="50">Top 50</option>
                             </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label d-block">Time Filter</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="today-only-check">
+                                <label class="form-check-label" for="today-only-check">
+                                    Today's tenders only
+                                </label>
+                            </div>
                         </div>
                     </div>
                     <div class="row mt-2">

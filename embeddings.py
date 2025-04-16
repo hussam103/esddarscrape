@@ -169,12 +169,13 @@ def cleanup_expired_embeddings():
     logger.info(f"Removed {count} expired embeddings")
     return count
 
-def search_similar_tenders(query_text, limit=10):
+def search_similar_tenders(query_text, limit=10, today_only=False):
     """Search for tenders similar to the query text
     
     Args:
         query_text (str): Text to search for
         limit (int, optional): Maximum number of results. Defaults to 10.
+        today_only (bool, optional): If True, only search in tenders published today. Defaults to False.
     
     Returns:
         list: List of tenders sorted by similarity
@@ -182,21 +183,31 @@ def search_similar_tenders(query_text, limit=10):
     # Create embedding for the query
     query_embedding = create_embedding(query_text)
     
-    # Get current date for filtering out passed tenders
+    # Get current date for filtering
     now = datetime.datetime.utcnow()
     
-    # Search for similar tenders excluding those with passed submission dates
-    results = db.session.query(
+    # Base query
+    query = db.session.query(
         Tender, 
         TenderEmbedding.embedding.cosine_distance(query_embedding).label('distance')
     ).join(
         TenderEmbedding,
         Tender.tender_id == TenderEmbedding.tender_id
-    ).filter(
+    )
+    
+    # Filter out tenders with passed submission dates
+    query = query.filter(
         (Tender.submission_deadline.is_(None)) | (Tender.submission_deadline > now)
-    ).order_by(
-        'distance'
-    ).limit(limit).all()
+    )
+    
+    # If today_only is True, filter to only show tenders published today
+    if today_only:
+        # Get the start of today
+        today_start = datetime.datetime.combine(now.date(), datetime.time.min)
+        query = query.filter(Tender.publication_date >= today_start)
+    
+    # Order by similarity and limit results
+    results = query.order_by('distance').limit(limit).all()
     
     # Extract tenders from results
     tenders = [{"tender": r[0].to_dict(), "similarity": 1 - r[1]} for r in results]

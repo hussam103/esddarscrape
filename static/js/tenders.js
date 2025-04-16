@@ -468,7 +468,9 @@ function performVectorSearch() {
                 // Show success message with time filter info if applicable
                 let timeFilterText = '';
                 if (timeFilter !== 'all') {
-                    if (timeFilter === '24h') {
+                    if (timeFilter === 'today') {
+                        timeFilterText = ' added today';
+                    } else if (timeFilter === '24h') {
                         timeFilterText = ' added in the last 24 hours';
                     } else if (timeFilter === '7d') {
                         timeFilterText = ' added in the last 7 days';
@@ -482,7 +484,9 @@ function performVectorSearch() {
                 // Show specific message for time-filtered searches with no results
                 if (timeFilter !== 'all') {
                     let timeFilterText = '';
-                    if (timeFilter === '24h') {
+                    if (timeFilter === 'today') {
+                        timeFilterText = 'added today';
+                    } else if (timeFilter === '24h') {
                         timeFilterText = 'in the last 24 hours';
                     } else if (timeFilter === '7d') {
                         timeFilterText = 'in the last 7 days';

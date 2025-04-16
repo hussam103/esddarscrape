@@ -210,7 +210,7 @@ def register_routes(app):
         try:
             query = request.args.get('query', '')
             limit = request.args.get('limit', 10, type=int)
-            time_filter = request.args.get('time_filter', None)  # Options: 24h, 7d, 30d, all
+            time_filter = request.args.get('time_filter', None)  # Options: today, 24h, 7d, 30d, all
             
             if not query:
                 return jsonify({'error': 'Query parameter is required'}), 400
@@ -219,7 +219,11 @@ def register_routes(app):
             time_threshold = None
             if time_filter:
                 now = datetime.utcnow()
-                if time_filter == '24h':
+                if time_filter == 'today':
+                    # Get the start of the current day (midnight UTC)
+                    today_start = datetime(now.year, now.month, now.day, 0, 0, 0)
+                    time_threshold = today_start
+                elif time_filter == '24h':
                     time_threshold = now - timedelta(hours=24)
                 elif time_filter == '7d':
                     time_threshold = now - timedelta(days=7)

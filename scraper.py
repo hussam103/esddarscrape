@@ -89,9 +89,13 @@ class EtimadScraper:
                                 tender_type = item.get('tenderTypeName', 'Unknown')
                                 
                                 # Extract main activities and duration
-                                main_activities = item.get('mainActivity', '')
-                                duration = item.get('tenderDuration', '')
+                                main_activities = item.get('tenderActivityName', '')
+                                duration = str(item.get('remainingDays', '')) + ' days'
                                 reference_number = item.get('tenderNumber', '')
+                                
+                                # Try to get city and price information
+                                city = item.get('branchName', '').split(' ')[-1] if item.get('branchName') else ''
+                                price = str(item.get('invitationCost', '')) if item.get('invitationCost') else str(item.get('financialFees', ''))
                                 
                                 # Process dates
                                 publication_date = None
@@ -105,9 +109,9 @@ class EtimadScraper:
                                         logger.warning(f"Error parsing publication date: {e}")
                                 
                                 inquiry_deadline = None
-                                if 'lastEnqueryDate' in item and item['lastEnqueryDate']:
+                                if 'lastEnqueriesDate' in item and item['lastEnqueriesDate']:
                                     try:
-                                        date_str = item['lastEnqueryDate']
+                                        date_str = item['lastEnqueriesDate']
                                         if isinstance(date_str, str) and 'T' in date_str:
                                             date_str = date_str.split('T')[0]
                                         inquiry_deadline = datetime.datetime.strptime(date_str, '%Y-%m-%d')
@@ -125,9 +129,9 @@ class EtimadScraper:
                                         logger.warning(f"Error parsing submission deadline: {e}")
                                 
                                 opening_date = None
-                                if 'openingDate' in item and item['openingDate']:
+                                if 'offersOpeningDate' in item and item['offersOpeningDate']:
                                     try:
-                                        date_str = item['openingDate']
+                                        date_str = item['offersOpeningDate']
                                         if isinstance(date_str, str) and 'T' in date_str:
                                             date_str = date_str.split('T')[0]
                                         opening_date = datetime.datetime.strptime(date_str, '%Y-%m-%d')
@@ -151,7 +155,9 @@ class EtimadScraper:
                                         'inquiry_deadline': inquiry_deadline,
                                         'submission_deadline': submission_deadline,
                                         'opening_date': opening_date,
-                                        'tender_url': url
+                                        'tender_url': url,
+                                        'city': city,
+                                        'price': price
                                     })
                                     
                             except Exception as e:
@@ -180,54 +186,66 @@ class EtimadScraper:
         
         try:
             for tender_data in tenders:
-                # Check if tender already exists
-                existing_tender = Tender.query.filter_by(tender_id=tender_data['tender_id']).first()
-                
-                if existing_tender:
-                    # Update existing tender
-                    existing_tender.tender_title = tender_data['tender_name']
-                    existing_tender.organization = tender_data['agency']
-                    existing_tender.tender_type = tender_data['category']
-                    existing_tender.city = tender_data.get('city', 'Unknown')
-                    existing_tender.price = tender_data.get('price', '')
+                try:
+                    # Check if tender already exists - use a try/except block to handle duplicates
+                    existing_tender = Tender.query.filter_by(tender_id=tender_data['tender_id']).first()
                     
-                    if 'start_date' in tender_data and tender_data['start_date']:
-                        existing_tender.publication_date = tender_data['start_date']
+                    if existing_tender:
+                        # Update existing tender
+                        existing_tender.tender_title = tender_data['tender_title']
+                        existing_tender.organization = tender_data['organization']
+                        existing_tender.tender_type = tender_data['tender_type']
+                        existing_tender.main_activities = tender_data.get('main_activities', '')
+                        existing_tender.duration = tender_data.get('duration', '')
+                        existing_tender.reference_number = tender_data.get('reference_number', '')
+                        
+                        if 'publication_date' in tender_data and tender_data['publication_date']:
+                            existing_tender.publication_date = tender_data['publication_date']
+                        
+                        if 'inquiry_deadline' in tender_data and tender_data['inquiry_deadline']:
+                            existing_tender.inquiry_deadline = tender_data['inquiry_deadline']
+                        
+                        if 'submission_deadline' in tender_data and tender_data['submission_deadline']:
+                            existing_tender.submission_deadline = tender_data['submission_deadline']
+                        
+                        if 'opening_date' in tender_data and tender_data['opening_date']:
+                            existing_tender.opening_date = tender_data['opening_date']
+                        
+                        existing_tender.tender_url = tender_data['tender_url']
+                        existing_tender.city = tender_data.get('city', '')
+                        existing_tender.price = tender_data.get('price', '')
+                        existing_tender.updated_at = datetime.datetime.utcnow()
+                        updated_count += 1
+                    else:
+                        # Create new tender
+                        new_tender = Tender(
+                            tender_id=tender_data['tender_id'],
+                            tender_title=tender_data['tender_title'],
+                            organization=tender_data['organization'],
+                            tender_type=tender_data['tender_type'],
+                            main_activities=tender_data.get('main_activities', ''),
+                            duration=tender_data.get('duration', ''),
+                            reference_number=tender_data.get('reference_number', ''),
+                            publication_date=tender_data.get('publication_date'),
+                            inquiry_deadline=tender_data.get('inquiry_deadline'),
+                            submission_deadline=tender_data.get('submission_deadline'),
+                            opening_date=tender_data.get('opening_date'),
+                            tender_url=tender_data['tender_url'],
+                            city=tender_data.get('city', ''),
+                            price=tender_data.get('price', ''),
+                            created_at=datetime.datetime.utcnow(),
+                            updated_at=datetime.datetime.utcnow()
+                        )
+                        db.session.add(new_tender)
+                        new_count += 1
                     
-                    if 'end_date' in tender_data and tender_data['end_date']:
-                        existing_tender.submission_deadline = tender_data['end_date']
-                    
-                    existing_tender.tender_url = tender_data['url']
-                    existing_tender.updated_at = datetime.datetime.utcnow()
-                    updated_count += 1
-                else:
-                    # Create new tender
-                    new_tender = Tender(
-                        tender_id=tender_data['tender_id'],
-                        tender_title=tender_data['tender_name'],
-                        organization=tender_data['agency'],
-                        tender_type=tender_data['category'],
-                        city=tender_data.get('city', 'Unknown'),
-                        price=tender_data.get('price', ''),
-                        publication_date=tender_data.get('start_date'),
-                        submission_deadline=tender_data.get('end_date'),
-                        tender_url=tender_data['url'],
-                        # Set default values for other required fields
-                        reference_number='',
-                        main_activities='',
-                        duration='',
-                        created_at=datetime.datetime.utcnow(),
-                        updated_at=datetime.datetime.utcnow()
-                    )
-                    db.session.add(new_tender)
-                    new_count += 1
-                
-                # Commit in batches to avoid long transactions
-                if (new_count + updated_count) % 50 == 0:
+                    # Commit each record individually to handle potential duplicates
                     db.session.commit()
-            
-            # Final commit for any remaining tenders
-            db.session.commit()
+                
+                except Exception as e:
+                    # Log the error but continue with the next tender
+                    logger.warning(f"Error saving tender {tender_data['tender_id']}: {str(e)}")
+                    db.session.rollback()
             
         except Exception as e:
             logger.error(f"Error saving tenders to database: {e}")

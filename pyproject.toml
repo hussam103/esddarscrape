@@ -15,5 +15,6 @@ dependencies = [
     "scheduler>=0.8.8",
     "sqlalchemy>=2.0.40",
     "trafilatura>=2.0.0",
+    "urllib3>=2.4.0",
     "werkzeug>=3.1.3",
 ]

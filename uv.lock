@@ -568,6 +568,7 @@ dependencies = [
     { name = "scheduler" },
     { name = "sqlalchemy" },
     { name = "trafilatura" },
+    { name = "urllib3" },
     { name = "werkzeug" },
 ]
 
@@ -584,6 +585,7 @@ requires-dist = [
     { name = "scheduler", specifier = ">=0.8.8" },
     { name = "sqlalchemy", specifier = ">=2.0.40" },
     { name = "trafilatura", specifier = ">=2.0.0" },
+    { name = "urllib3", specifier = ">=2.4.0" },
     { name = "werkzeug", specifier = ">=3.1.3" },
 ]
 

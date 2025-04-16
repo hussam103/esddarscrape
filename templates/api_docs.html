@@ -1,0 +1,271 @@
+{% extends 'layout.html' %}
+
+{% block title %}API Documentation{% endblock %}
+
+{% block styles %}
+<style>
+    pre {
+        background-color: #232325;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    
+    th, td {
+        padding: 10px;
+        border: 1px solid #444;
+    }
+    
+    th {
+        background-color: #2a2a2d;
+    }
+    
+    h2 {
+        margin-top: 30px;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #444;
+    }
+    
+    code {
+        background-color: #232325;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    
+    .endpoint {
+        background-color: #202224;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        border-left: 5px solid #0d6efd;
+    }
+    
+    .method {
+        font-weight: bold;
+        color: #0d6efd;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4">Vector Search API Documentation</h1>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2>Overview</h2>
+            <p>
+                The Vector Search API provides semantic search functionality to find tenders that are conceptually similar to a text query.
+                The API uses OpenAI embeddings to convert text into vector representations and performs cosine similarity searches against tender data in the database.
+            </p>
+            
+            <h2>Endpoint</h2>
+            <div class="endpoint">
+                <span class="method">GET</span> <code>/api/vector-search</code>
+            </div>
+            
+            <h2>Parameters</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>query</code></td>
+                        <td>string</td>
+                        <td>Yes</td>
+                        <td>-</td>
+                        <td>The text query to search for. This can be a question, description, or any text to match against tender content.</td>
+                    </tr>
+                    <tr>
+                        <td><code>limit</code></td>
+                        <td>integer</td>
+                        <td>No</td>
+                        <td>10</td>
+                        <td>The maximum number of results to return.</td>
+                    </tr>
+                    <tr>
+                        <td><code>today_only</code></td>
+                        <td>boolean</td>
+                        <td>No</td>
+                        <td>false</td>
+                        <td>If set to "true", only tenders published within the last 24 hours will be included in the search results.</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h2>Response Format</h2>
+            <p>The API returns a JSON object with the following structure:</p>
+            <pre><code>{
+  "query": "original query text",
+  "results": [
+    {
+      "tender": {
+        "id": 123,
+        "tender_id": "tender-unique-id",
+        "reference_number": "REF-12345",
+        "publication_date": "2025-04-15T10:00:00+03:00",
+        "tender_type": "Type of tender",
+        "tender_title": "Title of the tender",
+        "organization": "Organization name",
+        "tender_url": "https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID=unique-id",
+        "main_activities": "Description of main activities",
+        "duration": "6 months",
+        "inquiry_deadline": "2025-04-20T15:00:00+03:00",
+        "submission_deadline": "2025-04-30T15:00:00+03:00",
+        "opening_date": "2025-05-01T10:00:00+03:00",
+        "city": "City name",
+        "price": "100,000 SAR",
+        "created_at": "2025-04-15T08:30:00+03:00",
+        "updated_at": "2025-04-15T08:30:00+03:00"
+      },
+      "similarity": 0.92
+    },
+    // More results...
+  ],
+  "count": 10,
+  "today_only": false
+}</code></pre>
+            
+            <h2>Response Fields</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>query</code></td>
+                        <td>string</td>
+                        <td>The original query text submitted.</td>
+                    </tr>
+                    <tr>
+                        <td><code>results</code></td>
+                        <td>array</td>
+                        <td>Array of tender objects sorted by similarity (most similar first).</td>
+                    </tr>
+                    <tr>
+                        <td><code>results[].tender</code></td>
+                        <td>object</td>
+                        <td>The tender object containing all tender details.</td>
+                    </tr>
+                    <tr>
+                        <td><code>results[].similarity</code></td>
+                        <td>number</td>
+                        <td>A similarity score between 0 and 1, where 1 is an exact match. Typically ranges from 0.65 to 0.95 for good matches.</td>
+                    </tr>
+                    <tr>
+                        <td><code>count</code></td>
+                        <td>integer</td>
+                        <td>The number of results returned.</td>
+                    </tr>
+                    <tr>
+                        <td><code>today_only</code></td>
+                        <td>boolean</td>
+                        <td>Indicates whether the results were filtered to show only tenders from the last 24 hours.</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h2>Similarity Score</h2>
+            <p>The similarity score is a value between 0 and 1:</p>
+            <ul>
+                <li>0.90-1.00: Excellent match (very high relevance)</li>
+                <li>0.85-0.90: Good match (high relevance)</li>
+                <li>0.80-0.85: Moderate match (relevant)</li>
+                <li>0.75-0.80: Fair match (somewhat relevant)</li>
+                <li>&lt;0.75: Poor match (low relevance)</li>
+            </ul>
+            <p>The API returns raw similarity scores without any buffering or normalization, providing authentic confidence values.</p>
+            
+            <h2>Notes</h2>
+            <ol>
+                <li>The API only returns tenders with active submission deadlines (future deadlines or no deadline specified).</li>
+                <li>Vector embeddings are created using OpenAI's text-embedding-3-large model with 3072 dimensions.</li>
+                <li>The search takes into account the tender title, organization name, and main activities.</li>
+                <li>All dates are returned in Saudi Arabia time (GMT+3).</li>
+            </ol>
+            
+            <h2>Example Usage</h2>
+            
+            <h3>cURL</h3>
+            <pre><code>curl "https://your-domain.com/api/vector-search?query=solar%20power%20projects%20in%20Riyadh&limit=5&today_only=true"</code></pre>
+            
+            <h3>Python</h3>
+            <pre><code>import requests
+
+response = requests.get(
+    "https://your-domain.com/api/vector-search",
+    params={
+        "query": "solar power projects in Riyadh",
+        "limit": 5,
+        "today_only": "true"
+    }
+)
+
+results = response.json()
+for item in results["results"]:
+    print(f"Title: {item['tender']['tender_title']}")
+    print(f"Organization: {item['tender']['organization']}")
+    print(f"Similarity: {item['similarity']:.2f}")
+    print("---")</code></pre>
+            
+            <h3>JavaScript</h3>
+            <pre><code>fetch('/api/vector-search?query=solar power projects in Riyadh&limit=5&today_only=true')
+  .then(response => response.json())
+  .then(data => {
+    console.log(`Found ${data.count} matches`);
+    data.results.forEach(item => {
+      console.log(`Title: ${item.tender.tender_title}`);
+      console.log(`Organization: ${item.tender.organization}`);
+      console.log(`Similarity: ${item.similarity.toFixed(2)}`);
+      console.log('---');
+    });
+  })
+  .catch(error => console.error('Error:', error));</code></pre>
+            
+            <h2>Error Responses</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Status Code</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>400</td>
+                        <td>Bad Request - Required parameters are missing or invalid</td>
+                    </tr>
+                    <tr>
+                        <td>500</td>
+                        <td>Internal Server Error - Something went wrong on the server</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <p>Error responses will have the following format:</p>
+            <pre><code>{
+  "error": "Error message"
+}</code></pre>
+        </div>
+    </div>
+</div>
+{% endblock %}

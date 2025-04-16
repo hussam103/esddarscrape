@@ -26,6 +26,11 @@ def register_routes(app):
     def tenders():
         """Tenders page route"""
         return render_template('tenders.html')
+        
+    @app.route('/api-docs')
+    def api_docs():
+        """API documentation page"""
+        return render_template('api_docs.html')
     
     @app.route('/api/tenders')
     def api_tenders():

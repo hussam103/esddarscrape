@@ -430,8 +430,18 @@ function performVectorSearch() {
 
 // Update DataTable with vector search results
 function updateTableWithVectorResults() {
-    // Clear the table and add the vector search results
+    // Clear the table
     tendersTable.clear();
-    tendersTable.rows.add(vectorSearchResults);
+    
+    // Extract the tender objects from the vector search results
+    // Vector search returns objects with {tender: {...}, similarity: 0.95} structure
+    // But DataTables expects flat objects, so we need to extract the tender properties
+    const flattenedResults = vectorSearchResults.map(item => {
+        // Return the tender object directly from the vector search result
+        return item.tender;
+    });
+    
+    // Add the flattened results to the table
+    tendersTable.rows.add(flattenedResults);
     tendersTable.draw();
 }

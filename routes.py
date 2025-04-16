@@ -30,9 +30,13 @@ def register_routes(app):
         try:
             # Get query parameters for pagination and filtering
             page = request.args.get('page', 1, type=int)
-            per_page = request.args.get('per_page', 100, type=int)
+            per_page = request.args.get('per_page', 300, type=int)
+            # For DataTables server-side processing
+            # If the length parameter is -1, return all records
+            if per_page == -1:
+                per_page = 300
             # Allow up to 300 tenders per page
-            if per_page > 300:
+            elif per_page > 300:
                 per_page = 300
             search = request.args.get('search', '')
             organization = request.args.get('organization', '')

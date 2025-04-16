@@ -95,13 +95,13 @@ function initializeTendersTable() {
     
     // Create DataTable
     tendersTable = $('#tendersTable').DataTable({
-        serverSide: false,  // We'll handle pagination on the server side manually
+        serverSide: true,  // Enable server-side processing to handle large datasets
         processing: true,
         paging: true,
         ordering: false,  // Disable client-side sorting as we'll use server-side sorting
         searching: false,  // We handle search via our own filters
-        lengthMenu: [[25, 50, 100, 300], [25, 50, 100, "All 300"]],
-        pageLength: 300,
+        lengthMenu: [[25, 50, 100, -1], [25, 50, 100, "All 300"]],
+        pageLength: -1,  // Default to all entries (-1 means all)
         language: {
             processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
             emptyTable: 'No tenders found'

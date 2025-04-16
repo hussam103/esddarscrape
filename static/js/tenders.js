@@ -2,6 +2,7 @@
 
 // DataTable instance
 let tendersTable;
+let vectorSearchResults = []; // Store vector search results
 
 // Initialize tenders page
 document.addEventListener('DOMContentLoaded', function() {
@@ -275,4 +276,162 @@ function showTenderDetails(tenderId) {
                 </div>
             `;
         });
+}
+
+// Initialize vector search functionality
+function initializeVectorSearch() {
+    // Load embeddings stats
+    loadEmbeddingsStats();
+    
+    // Add event listeners
+    document.getElementById('run-vector-search').addEventListener('click', performVectorSearch);
+    document.getElementById('generate-embeddings').addEventListener('click', generateEmbeddings);
+    
+    // Add event listener for tab switch to reload stats
+    const vectorTab = document.getElementById('vector-tab');
+    vectorTab.addEventListener('shown.bs.tab', function (e) {
+        loadEmbeddingsStats();
+    });
+    
+    // Allow searching with Enter key
+    document.getElementById('vector-query').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            performVectorSearch();
+        }
+    });
+}
+
+// Load embeddings statistics
+function loadEmbeddingsStats() {
+    const statsContainer = document.getElementById('vector-embeddings-stats');
+    statsContainer.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div> Loading stats...';
+    
+    fetch('/api/embeddings/stats')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(stats => {
+            let html = '<div class="mt-2 small">';
+            html += `<p><strong>Tenders with embeddings:</strong> ${stats.tenders_with_embeddings} / ${stats.total_tenders}</p>`;
+            
+            if (stats.tenders_needing_embeddings > 0) {
+                html += `<p class="text-warning"><strong>Tenders needing embeddings:</strong> ${stats.tenders_needing_embeddings}</p>`;
+            } else {
+                html += '<p class="text-success"><strong>All eligible tenders have embeddings</strong></p>';
+            }
+            
+            html += '</div>';
+            statsContainer.innerHTML = html;
+            
+            // Enable/disable generate button based on needs
+            const generateButton = document.getElementById('generate-embeddings');
+            if (stats.tenders_needing_embeddings > 0) {
+                generateButton.removeAttribute('disabled');
+                generateButton.classList.remove('btn-outline-secondary');
+                generateButton.classList.add('btn-secondary');
+            } else {
+                generateButton.setAttribute('disabled', 'disabled');
+                generateButton.classList.remove('btn-secondary');
+                generateButton.classList.add('btn-outline-secondary');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading embeddings stats:', error);
+            statsContainer.innerHTML = '<div class="alert alert-danger small">Error loading embedding statistics</div>';
+        });
+}
+
+// Generate embeddings for tenders that need them
+function generateEmbeddings() {
+    const button = document.getElementById('generate-embeddings');
+    const statusContainer = document.getElementById('vector-status');
+    
+    // Disable button during generation
+    button.setAttribute('disabled', 'disabled');
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+    
+    statusContainer.innerHTML = '<div class="alert alert-info">Generating embeddings, please wait...</div>';
+    
+    fetch('/api/embeddings/generate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ limit: 50 }) // Process up to 50 tenders at a time
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(result => {
+            statusContainer.innerHTML = `<div class="alert alert-success">Successfully generated ${result.created} embeddings</div>`;
+            loadEmbeddingsStats(); // Refresh stats after generation
+            
+            // Re-enable button
+            button.removeAttribute('disabled');
+            button.textContent = 'Generate Embeddings';
+        })
+        .catch(error => {
+            console.error('Error generating embeddings:', error);
+            statusContainer.innerHTML = '<div class="alert alert-danger">Error generating embeddings</div>';
+            
+            // Re-enable button
+            button.removeAttribute('disabled');
+            button.textContent = 'Generate Embeddings';
+        });
+}
+
+// Perform vector search
+function performVectorSearch() {
+    const query = document.getElementById('vector-query').value.trim();
+    const limit = document.getElementById('vector-limit').value;
+    const statusContainer = document.getElementById('vector-status');
+    
+    if (!query) {
+        statusContainer.innerHTML = '<div class="alert alert-warning">Please enter a search query</div>';
+        return;
+    }
+    
+    statusContainer.innerHTML = '<div class="alert alert-info"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Searching...</div>';
+    
+    // Perform vector search
+    fetch(`/api/vector-search?query=${encodeURIComponent(query)}&limit=${limit}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (result.results && result.results.length > 0) {
+                vectorSearchResults = result.results;
+                updateTableWithVectorResults();
+                
+                // Switch to the results tab
+                document.getElementById('filter-tab').classList.remove('active');
+                document.getElementById('filter-tab-pane').classList.remove('show', 'active');
+                
+                // Show success message
+                statusContainer.innerHTML = `<div class="alert alert-success">Found ${result.results.length} matching tenders</div>`;
+            } else {
+                statusContainer.innerHTML = '<div class="alert alert-warning">No matching tenders found. Try a different query.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error performing vector search:', error);
+            statusContainer.innerHTML = '<div class="alert alert-danger">Error performing search. Please try again later.</div>';
+        });
+}
+
+// Update DataTable with vector search results
+function updateTableWithVectorResults() {
+    // Clear the table and add the vector search results
+    tendersTable.clear();
+    tendersTable.rows.add(vectorSearchResults);
+    tendersTable.draw();
 }

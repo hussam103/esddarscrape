@@ -180,77 +180,100 @@ class EtimadScraper:
         return tenders
     
     def save_tenders_to_db(self, tenders):
-        """Save tenders to the database"""
+        """Save tenders to the database using batch processing to improve reliability"""
         new_count = 0
         updated_count = 0
+        batch_size = 50  # Process in smaller batches to reduce transaction time
         
         try:
-            for tender_data in tenders:
+            # Split tenders into smaller batches for more reliable processing
+            for i in range(0, len(tenders), batch_size):
+                batch = tenders[i:i+batch_size]
+                batch_new = 0
+                batch_updated = 0
+                
                 try:
-                    # Check if tender already exists - use a try/except block to handle duplicates
-                    existing_tender = Tender.query.filter_by(tender_id=tender_data['tender_id']).first()
+                    # Process each tender in the current batch
+                    for tender_data in batch:
+                        try:
+                            # Check if tender already exists
+                            existing_tender = Tender.query.filter_by(tender_id=tender_data['tender_id']).first()
+                            
+                            if existing_tender:
+                                # Update existing tender
+                                existing_tender.tender_title = tender_data['tender_title']
+                                existing_tender.organization = tender_data['organization']
+                                existing_tender.tender_type = tender_data['tender_type']
+                                existing_tender.main_activities = tender_data.get('main_activities', '')
+                                existing_tender.duration = tender_data.get('duration', '')
+                                existing_tender.reference_number = tender_data.get('reference_number', '')
+                                
+                                if 'publication_date' in tender_data and tender_data['publication_date']:
+                                    existing_tender.publication_date = tender_data['publication_date']
+                                
+                                if 'inquiry_deadline' in tender_data and tender_data['inquiry_deadline']:
+                                    existing_tender.inquiry_deadline = tender_data['inquiry_deadline']
+                                
+                                if 'submission_deadline' in tender_data and tender_data['submission_deadline']:
+                                    existing_tender.submission_deadline = tender_data['submission_deadline']
+                                
+                                if 'opening_date' in tender_data and tender_data['opening_date']:
+                                    existing_tender.opening_date = tender_data['opening_date']
+                                
+                                existing_tender.tender_url = tender_data['tender_url']
+                                existing_tender.city = tender_data.get('city', '')
+                                existing_tender.price = tender_data.get('price', '')
+                                existing_tender.updated_at = datetime.datetime.utcnow()
+                                batch_updated += 1
+                            else:
+                                # Create new tender
+                                new_tender = Tender(
+                                    tender_id=tender_data['tender_id'],
+                                    tender_title=tender_data['tender_title'],
+                                    organization=tender_data['organization'],
+                                    tender_type=tender_data['tender_type'],
+                                    main_activities=tender_data.get('main_activities', ''),
+                                    duration=tender_data.get('duration', ''),
+                                    reference_number=tender_data.get('reference_number', ''),
+                                    publication_date=tender_data.get('publication_date'),
+                                    inquiry_deadline=tender_data.get('inquiry_deadline'),
+                                    submission_deadline=tender_data.get('submission_deadline'),
+                                    opening_date=tender_data.get('opening_date'),
+                                    tender_url=tender_data['tender_url'],
+                                    city=tender_data.get('city', ''),
+                                    price=tender_data.get('price', ''),
+                                    created_at=datetime.datetime.utcnow(),
+                                    updated_at=datetime.datetime.utcnow()
+                                )
+                                db.session.add(new_tender)
+                                batch_new += 1
+                        except Exception as e:
+                            # Log the error but continue with next tender
+                            logger.warning(f"Error processing tender {tender_data.get('tender_id', 'unknown')}: {str(e)}")
+                            # Don't rollback the entire session here, just skip this tender
                     
-                    if existing_tender:
-                        # Update existing tender
-                        existing_tender.tender_title = tender_data['tender_title']
-                        existing_tender.organization = tender_data['organization']
-                        existing_tender.tender_type = tender_data['tender_type']
-                        existing_tender.main_activities = tender_data.get('main_activities', '')
-                        existing_tender.duration = tender_data.get('duration', '')
-                        existing_tender.reference_number = tender_data.get('reference_number', '')
-                        
-                        if 'publication_date' in tender_data and tender_data['publication_date']:
-                            existing_tender.publication_date = tender_data['publication_date']
-                        
-                        if 'inquiry_deadline' in tender_data and tender_data['inquiry_deadline']:
-                            existing_tender.inquiry_deadline = tender_data['inquiry_deadline']
-                        
-                        if 'submission_deadline' in tender_data and tender_data['submission_deadline']:
-                            existing_tender.submission_deadline = tender_data['submission_deadline']
-                        
-                        if 'opening_date' in tender_data and tender_data['opening_date']:
-                            existing_tender.opening_date = tender_data['opening_date']
-                        
-                        existing_tender.tender_url = tender_data['tender_url']
-                        existing_tender.city = tender_data.get('city', '')
-                        existing_tender.price = tender_data.get('price', '')
-                        existing_tender.updated_at = datetime.datetime.utcnow()
-                        updated_count += 1
-                    else:
-                        # Create new tender
-                        new_tender = Tender(
-                            tender_id=tender_data['tender_id'],
-                            tender_title=tender_data['tender_title'],
-                            organization=tender_data['organization'],
-                            tender_type=tender_data['tender_type'],
-                            main_activities=tender_data.get('main_activities', ''),
-                            duration=tender_data.get('duration', ''),
-                            reference_number=tender_data.get('reference_number', ''),
-                            publication_date=tender_data.get('publication_date'),
-                            inquiry_deadline=tender_data.get('inquiry_deadline'),
-                            submission_deadline=tender_data.get('submission_deadline'),
-                            opening_date=tender_data.get('opening_date'),
-                            tender_url=tender_data['tender_url'],
-                            city=tender_data.get('city', ''),
-                            price=tender_data.get('price', ''),
-                            created_at=datetime.datetime.utcnow(),
-                            updated_at=datetime.datetime.utcnow()
-                        )
-                        db.session.add(new_tender)
-                        new_count += 1
-                    
-                    # Commit each record individually to handle potential duplicates
-                    db.session.commit()
+                    # Commit the batch
+                    try:
+                        db.session.commit()
+                        logger.info(f"Committed batch {i//batch_size + 1} with {batch_new} new and {batch_updated} updated tenders")
+                        new_count += batch_new
+                        updated_count += batch_updated
+                    except Exception as e:
+                        logger.error(f"Error committing batch {i//batch_size + 1}: {str(e)}")
+                        db.session.rollback()
+                        # Continue with next batch instead of failing the entire process
                 
                 except Exception as e:
-                    # Log the error but continue with the next tender
-                    logger.warning(f"Error saving tender {tender_data['tender_id']}: {str(e)}")
+                    logger.error(f"Error processing batch {i//batch_size + 1}: {str(e)}")
                     db.session.rollback()
+                
+                # Small delay between batches to prevent database overload
+                time.sleep(0.1)
             
         except Exception as e:
-            logger.error(f"Error saving tenders to database: {e}")
+            logger.error(f"Error in batch processing: {e}")
             db.session.rollback()
-            raise
+            # Don't raise the exception, let the process continue
         
         logger.info(f"Saved {new_count} new tenders and updated {updated_count} existing tenders")
         return new_count, updated_count
@@ -304,11 +327,28 @@ class EtimadScraper:
             raise
 
 def run_scraper():
-    """Run the scraper and return the results"""
+    """Run the scraper and return the results with improved error handling"""
     logger.info("Starting scraper job")
     scraper = EtimadScraper()
     try:
+        # Use a try/except block to catch any errors during scraping
+        # but don't propagate them to the caller to prevent application crashes
         scraper.scrape()
         logger.info("Scraper job completed successfully")
+        return True
     except Exception as e:
         logger.error(f"Scraper job failed: {str(e)}")
+        
+        # Create an error log entry if none was created in scrape()
+        try:
+            log_entry = ScrapingLog(
+                status="ERROR",
+                message=f"Scraper job failed with error: {str(e)}",
+                end_time=datetime.datetime.utcnow()
+            )
+            db.session.add(log_entry)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"Could not create error log: {str(log_error)}")
+            
+        return False

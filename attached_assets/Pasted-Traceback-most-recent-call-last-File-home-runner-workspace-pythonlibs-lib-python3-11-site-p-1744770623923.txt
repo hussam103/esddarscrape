@@ -1,0 +1,82 @@
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/middleware/proxy_fix.py", line 183, in __call__
+    return self.app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/routes.py", line 176, in api_trigger_scrape
+    run_scraper()
+  File "/home/runner/workspace/scraper.py", line 311, in run_scraper
+    scraper.scrape()
+  File "/home/runner/workspace/scraper.py", line 275, in scrape
+    new_count, updated_count = self.save_tenders_to_db(tenders)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/scraper.py", line 243, in save_tenders_to_db
+    db.session.commit()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py", line 599, in commit
+    return self._proxied.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2032, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py", line 139, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1320, in commit
+    trans.commit()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2629, in commit
+    self._do_commit()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2734, in _do_commit
+    self._connection_commit_impl()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2705, in _connection_commit_impl
+    self.connection._commit_impl()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1144, in _commit_impl
+    self._handle_dbapi_exception(e, None, None, None, None)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2355, in _handle_dbapi_exception
+    raise exc_info[1].with_traceback(exc_info[2])
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1142, in _commit_impl
+    self.engine.dialect.do_commit(self.connection)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 706, in do_commit
+    dbapi_connection.commit()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+SystemExit: 1
+[2025-04-16 02:29:52 +0000] [5088] [INFO] Worker exiting (pid: 5088)
+[2025-04-16 02:29:52 +0000] [5201] [INFO] Booting worker with pid: 5201
+2025-04-16 02:29:54,363 - tzlocal - DEBUG - No explicit setting existed. Use localtime
+2025-04-16 02:29:54,363 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-04-16 02:29:54,364 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-04-16 02:29:54,365 - apscheduler.scheduler - INFO - Added job "Scrape Etimad Tenders" to job store "default"
+2025-04-16 02:29:54,365 - apscheduler.scheduler - INFO - Added job "Initial Etimad Tenders Scrape" to job store "default"
+2025-04-16 02:29:54,365 - apscheduler.scheduler - INFO - Scheduler started
+2025-04-16 02:29:54,365 - apscheduler.scheduler - DEBUG - Looking for jobs to run
+2025-04-16 02:29:54,365 - scheduler - INFO - Scheduler started, scraper will run at 6 AM, 2 PM, and 10 PM UTC
+2025-04-16 02:29:54,365 - scheduler - INFO - Initial scrape will run in the background after startup
+2025-04-16 02:29:54,365 - apscheduler.executors.default - INFO - Running job "Initial Etimad Tenders Scrape (trigger: date[2025-04-16 02:29:54 UTC], next run at: 2025-04-16 02:29:54 UTC)" (scheduled at 2025-04-16 02:29:54.364003+00:00)
+2025-04-16 02:29:54,366 - apscheduler.scheduler - INFO - Removed job initial_scrape
+2025-04-16 02:29:54,367 - scraper - INFO - Starting scraper job
+2025-04-16 02:29:54,367 - apscheduler.scheduler - DEBUG - Next wakeup is due at 2025-04-16 06:00:00+00:00 (in 12605.632827 seconds)
+2025-04-16 02:29:54,634 - scraper - INFO - Starting scraping process
+2025-04-16 02:29:54,634 - scraper - INFO - Fetching page 1
+2025-04-16 02:29:54,634 - scraper - INFO - Making request to https://tenders.etimad.sa/Tender/AllSupplierTendersForVisitorAsync with params: {'pageNumber': 1, 'pageSize': 300}
+2025-04-16 02:29:54,637 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): tenders.etimad.sa:443
+2025-04-16 02:29:56,715 - urllib3.connectionpool - DEBUG - https://tenders.etimad.sa:443 "GET /Tender/AllSupplierTendersForVisitorAsync?pageNumber=1&pageSize=300 HTTP/1.1" 200 None
+2025-04-16 02:29:58,206 - scraper - INFO - Successfully got response from API endpoint
+2025-04-16 02:29:58,211 - scraper - INFO - Successfully parsed JSON from API response
+2025-04-16 02:29:58,211 - scraper - INFO - Found 300 items in API response
+2025-04-16 02:29:58,219 - scraper - INFO - Found 300 valid tenders

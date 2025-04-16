@@ -206,19 +206,33 @@ def register_routes(app):
             
     @app.route('/api/vector-search')
     def api_vector_search():
-        """Vector search API using OpenAI embeddings"""
+        """Vector search API using OpenAI embeddings with time filter option"""
         try:
             query = request.args.get('query', '')
             limit = request.args.get('limit', 10, type=int)
+            time_filter = request.args.get('time_filter', None)  # Options: 24h, 7d, 30d, all
             
             if not query:
                 return jsonify({'error': 'Query parameter is required'}), 400
-                
-            # Perform vector search
-            results = embeddings.search_similar_tenders(query, limit)
+            
+            # Set time threshold based on the time filter
+            time_threshold = None
+            if time_filter:
+                now = datetime.utcnow()
+                if time_filter == '24h':
+                    time_threshold = now - timedelta(hours=24)
+                elif time_filter == '7d':
+                    time_threshold = now - timedelta(days=7)
+                elif time_filter == '30d':
+                    time_threshold = now - timedelta(days=30)
+                # 'all' or invalid value: no time threshold
+            
+            # Perform vector search with time filter
+            results = embeddings.search_similar_tenders(query, limit, time_threshold)
             
             return jsonify({
                 'query': query,
+                'time_filter': time_filter,
                 'results': results,
                 'count': len(results)
             })

@@ -12,6 +12,15 @@ from utils import get_saudi_now, get_saudi_time_days_ago
 logger = logging.getLogger(__name__)
 
 def register_routes(app):
+    # Add CORS headers for API endpoints
+    @app.after_request
+    def add_cors_headers(response):
+        """Add CORS headers for public API access"""
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,OPTIONS,POST')
+        return response
+        
     @app.route('/')
     def index():
         """Home page route"""
@@ -210,9 +219,9 @@ def register_routes(app):
             logger.error(f"Error fetching logs: {str(e)}")
             return jsonify({'error': str(e)}), 500
             
-    @app.route('/api/vector-search')
+    @app.route('/api/vector-search', methods=['GET'])
     def api_vector_search():
-        """Vector search API using OpenAI embeddings"""
+        """Vector search API using OpenAI embeddings - public access"""
         try:
             query = request.args.get('query', '')
             limit = request.args.get('limit', 10, type=int)

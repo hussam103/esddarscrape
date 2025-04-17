@@ -89,7 +89,8 @@ The API returns raw similarity scores without any buffering or normalization, pr
 ### cURL
 
 ```bash
-curl "https://your-domain.com/api/vector-search?query=solar%20power%20projects%20in%20Riyadh&limit=5&today_only=true"
+# Replace with your actual domain name
+curl "https://etimad-tenders.yourdomain.repl.co/api/vector-search?query=solar%20power%20projects%20in%20Riyadh&limit=5&today_only=true"
 ```
 
 ### Python
@@ -97,8 +98,11 @@ curl "https://your-domain.com/api/vector-search?query=solar%20power%20projects%2
 ```python
 import requests
 
+# Replace with your actual domain name
+BASE_URL = "https://etimad-tenders.yourdomain.repl.co"
+
 response = requests.get(
-    "https://your-domain.com/api/vector-search",
+    f"{BASE_URL}/api/vector-search",
     params={
         "query": "solar power projects in Riyadh",
         "limit": 5,
@@ -114,10 +118,13 @@ for item in results["results"]:
     print("---")
 ```
 
-### JavaScript
+### JavaScript (Browser)
 
 ```javascript
-fetch('/api/vector-search?query=solar power projects in Riyadh&limit=5&today_only=true')
+// Replace with your actual domain name
+const BASE_URL = "https://etimad-tenders.yourdomain.repl.co";
+
+fetch(`${BASE_URL}/api/vector-search?query=solar power projects in Riyadh&limit=5&today_only=true`)
   .then(response => response.json())
   .then(data => {
     console.log(`Found ${data.count} matches`);
@@ -129,6 +136,34 @@ fetch('/api/vector-search?query=solar power projects in Riyadh&limit=5&today_onl
     });
   })
   .catch(error => console.error('Error:', error));
+```
+
+### Node.js
+
+```javascript
+const axios = require('axios');
+
+// Replace with your actual domain name
+const BASE_URL = "https://etimad-tenders.yourdomain.repl.co";
+
+axios.get(`${BASE_URL}/api/vector-search`, {
+  params: {
+    query: 'solar power projects in Riyadh',
+    limit: 5,
+    today_only: true
+  }
+})
+.then(response => {
+  const data = response.data;
+  console.log(`Found ${data.count} matches`);
+  data.results.forEach(item => {
+    console.log(`Title: ${item.tender.tender_title}`);
+    console.log(`Organization: ${item.tender.organization}`);
+    console.log(`Similarity: ${item.similarity.toFixed(2)}`);
+    console.log('---');
+  });
+})
+.catch(error => console.error('Error:', error));
 ```
 
 ## Error Responses

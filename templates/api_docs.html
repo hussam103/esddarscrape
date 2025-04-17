@@ -206,13 +206,17 @@
             <h2>Example Usage</h2>
             
             <h3>cURL</h3>
-            <pre><code>curl "https://your-domain.com/api/vector-search?query=solar%20power%20projects%20in%20Riyadh&limit=5&today_only=true"</code></pre>
+            <pre><code># Replace with your actual domain name
+curl "https://etimad-tenders.yourdomain.repl.co/api/vector-search?query=solar%20power%20projects%20in%20Riyadh&limit=5&today_only=true"</code></pre>
             
             <h3>Python</h3>
             <pre><code>import requests
 
+# Replace with your actual domain name
+BASE_URL = "https://etimad-tenders.yourdomain.repl.co"
+
 response = requests.get(
-    "https://your-domain.com/api/vector-search",
+    f"{BASE_URL}/api/vector-search",
     params={
         "query": "solar power projects in Riyadh",
         "limit": 5,
@@ -227,8 +231,11 @@ for item in results["results"]:
     print(f"Similarity: {item['similarity']:.2f}")
     print("---")</code></pre>
             
-            <h3>JavaScript</h3>
-            <pre><code>fetch('/api/vector-search?query=solar power projects in Riyadh&limit=5&today_only=true')
+            <h3>JavaScript (Browser)</h3>
+            <pre><code>// Replace with your actual domain name
+const BASE_URL = "https://etimad-tenders.yourdomain.repl.co";
+
+fetch(`${BASE_URL}/api/vector-search?query=solar power projects in Riyadh&limit=5&today_only=true`)
   .then(response => response.json())
   .then(data => {
     console.log(`Found ${data.count} matches`);
@@ -240,6 +247,31 @@ for item in results["results"]:
     });
   })
   .catch(error => console.error('Error:', error));</code></pre>
+            
+            <h3>Node.js</h3>
+            <pre><code>const axios = require('axios');
+
+// Replace with your actual domain name
+const BASE_URL = "https://etimad-tenders.yourdomain.repl.co";
+
+axios.get(`${BASE_URL}/api/vector-search`, {
+  params: {
+    query: 'solar power projects in Riyadh',
+    limit: 5,
+    today_only: true
+  }
+})
+.then(response => {
+  const data = response.data;
+  console.log(`Found ${data.count} matches`);
+  data.results.forEach(item => {
+    console.log(`Title: ${item.tender.tender_title}`);
+    console.log(`Organization: ${item.tender.organization}`);
+    console.log(`Similarity: ${item.similarity.toFixed(2)}`);
+    console.log('---');
+  });
+})
+.catch(error => console.error('Error:', error));</code></pre>
             
             <h2>Error Responses</h2>
             <table class="table">

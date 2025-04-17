@@ -1,0 +1,227 @@
+{
+    "count": 10,
+    "query": "solar power systems",
+    "results": [
+        {
+            "similarity": 0.3125272132407647,
+            "tender": {
+                "city": "\u0627\u0644\u0645\u0633\u062a\u062f\u0627\u0645\u0629",
+                "created_at": "2025-04-16T01:53:52.302578",
+                "duration": "15 days",
+                "id": 107,
+                "inquiry_deadline": "2025-04-28T00:00:00",
+                "main_activities": "\u0623\u0646\u0634\u0637\u0629 \u0632\u0631\u0627\u0639\u064a\u0629",
+                "opening_date": "2025-05-01T00:00:00",
+                "organization": "\u0627\u0644\u0645\u0631\u0643\u0632 \u0627\u0644\u0648\u0637\u0646\u064a \u0644\u0627\u0628\u062d\u0627\u062b \u0648\u062a\u0637\u0648\u064a\u0631 \u0627\u0644\u0632\u0631\u0627\u0639\u0629 \u0627\u0644\u0645\u0633\u062a\u062f\u0627\u0645\u0629",
+                "price": "200.0",
+                "publication_date": "2025-04-15T00:00:00",
+                "reference_number": "IR2503000006",
+                "submission_deadline": "2025-05-01T00:00:00",
+                "tender_id": "929074",
+                "tender_title": "\u062a\u0637\u0648\u064a\u0631 \u0623\u0646\u0638\u0645\u0629 \u0627\u0644\u062a\u062d\u0643\u0645 \u0641\u064a \u0627\u0644\u0645\u0646\u0627\u062e \u0644\u0644\u0628\u064a\u0648\u062a \u0627\u0644\u0645\u062d\u0645\u064a\u0629 \u0644\u0644\u0645\u0631\u0643\u0632 \u0627\u0644\u0648\u0637\u0646\u064a \u0644\u0623\u0628\u062d\u0627\u062b \u0648\u062a\u0637\u0648\u064a\u0631 \u0627\u0644\u0632\u0631\u0627\u0639\u0629 \u0627\u0644\u0645\u0633\u062a\u062f\u0627\u0645\u0629 (\u0627\u0633\u062a\u062f\u0627\u0645\u0647)",
+                "tender_type": "\u0645\u0646\u0627\u0641\u0633\u0629 \u0639\u0627\u0645\u0629",
+                "tender_url": "https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID=929074",
+                "updated_at": "2025-04-16T02:35:04.166156"
+            }
+        },
+        {
+            "similarity": 0.3012541589878519,
+            "tender": {
+                "city": "\u0627\u0644\u063a\u0631\u0628\u064a",
+                "created_at": "2025-04-16T01:54:12.423090",
+                "duration": "15 days",
+                "id": 256,
+                "inquiry_deadline": "2025-04-29T00:00:00",
+                "main_activities": "\u062a\u062c\u0627\u0631\u0629 \u0642\u0637\u0639 \u0627\u0644\u063a\u064a\u0627\u0631 \u0627\u0644\u062c\u062f\u064a\u062f\u0629 ",
+                "opening_date": "2025-05-01T00:00:00",
+                "organization": "\u0627\u0644\u0645\u0624\u0633\u0633\u0629 \u0627\u0644\u0639\u0627\u0645\u0629 \u0644\u062a\u062d\u0644\u064a\u0629 \u0627\u0644\u0645\u064a\u0627\u0647 \u0627\u0644\u0645\u0627\u0644\u062d\u0629",
+                "price": "200.0",
+                "publication_date": "2025-04-15T00:00:00",
+                "reference_number": "60017315",
+                "submission_deadline": "2025-05-01T00:00:00",
+                "tender_id": "929749",
+                "tender_title": "\u062a\u0648\u0631\u064a\u062f \u0627\u062d\u0647\u0632\u0629 \u0627\u0636\u0627\u0621\u0629 \u0635\u0646\u0627\u0639\u064a\u0629 \u0644\u0644\u0647\u064a\u0626\u0629 \u0627\u0644\u0633\u0639\u0648\u062f\u064a\u0647 \u0644\u0644\u0645\u064a\u0627\u0647 \u0645\u0646\u0638\u0648\u0645\u0629 \u0627\u0646\u062a\u0627\u062c \u0627\u0644\u0634\u0639\u064a\u0628\u0647 \u0627\u0644\u0633\u0627\u062d\u0644 \u0627\u0644\u063a\u0631\u0628\u064a",
+                "tender_type": "\u0645\u0646\u0627\u0641\u0633\u0629 \u0639\u0627\u0645\u0629",
+                "tender_url": "https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID=929749",
+                "updated_at": "2025-04-16T02:35:24.269779"
+            }
+        },
+        {
+            "similarity": 0.28878102965468044,
+            "tender": {
+                "city": "",
+                "created_at": "2025-04-16T01:54:08.624846",
+                "duration": "15 days",
+                "id": 227,
+                "inquiry_deadline": "2025-04-25T00:00:00",
+                "main_activities": "\u062a\u062c\u0627\u0631\u0629 \u0642\u0637\u0639 \u0627\u0644\u063a\u064a\u0627\u0631 \u0627\u0644\u062c\u062f\u064a\u062f\u0629 ",
+                "opening_date": "2025-05-01T00:00:00",
+                "organization": "\u0627\u0644\u0645\u0624\u0633\u0633\u0629 \u0627\u0644\u0639\u0627\u0645\u0629 \u0644\u062a\u062d\u0644\u064a\u0629 \u0627\u0644\u0645\u064a\u0627\u0647 \u0627\u0644\u0645\u0627\u0644\u062d\u0629",
+                "price": "200.0",
+                "publication_date": "2025-04-15T00:00:00",
+                "reference_number": "60017121",
+                "submission_deadline": "2025-05-01T00:00:00",
+                "tender_id": "919013",
+                "tender_title": "\u062a\u0648\u0631\u064a\u062f \u0642\u0637\u0639 \u063a\u064a\u0627\u0631 \u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629 \u0644\u0645\u0646\u0638\u0648\u0645\u0629 \u0625\u0646\u062a\u0627\u062c \u064a\u0646\u0628\u0639 - 60017121",
+                "tender_type": "\u0645\u0646\u0627\u0641\u0633\u0629 \u0639\u0627\u0645\u0629",
+                "tender_url": "https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID=919013",
+                "updated_at": "2025-04-16T02:35:20.478255"
+            }
+        },
+        {
+            "similarity": 0.288180747275974,
+            "tender": {
+                "city": "",
+                "created_at": "2025-04-16T01:54:11.523424",
+                "duration": "15 days",
+                "id": 249,
+                "inquiry_deadline": "2025-04-25T00:00:00",
+                "main_activities": "\u062a\u062c\u0627\u0631\u0629 \u0642\u0637\u0639 \u0627\u0644\u063a\u064a\u0627\u0631 \u0627\u0644\u062c\u062f\u064a\u062f\u0629 ",
+                "opening_date": "2025-05-01T00:00:00",
+                "organization": "\u0627\u0644\u0645\u0624\u0633\u0633\u0629 \u0627\u0644\u0639\u0627\u0645\u0629 \u0644\u062a\u062d\u0644\u064a\u0629 \u0627\u0644\u0645\u064a\u0627\u0647 \u0627\u0644\u0645\u0627\u0644\u062d\u0629",
+                "price": "200.0",
+                "publication_date": "2025-04-15T00:00:00",
+                "reference_number": "60017120",
+                "submission_deadline": "2025-05-01T00:00:00",
+                "tender_id": "919003",
+                "tender_title": "\u062a\u0648\u0631\u064a\u062f \u0642\u0637\u0639 \u063a\u064a\u0627\u0631 \u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629 \u0644\u0645\u0646\u0638\u0648\u0645\u0629 \u0625\u0646\u062a\u0627\u062c \u064a\u0646\u0628\u0639 - 60017120",
+                "tender_type": "\u0645\u0646\u0627\u0641\u0633\u0629 \u0639\u0627\u0645\u0629",
+                "tender_url": "https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID=919003",
+                "updated_at": "2025-04-16T02:35:23.333871"
+            }
+        },
+        {
+            "similarity": 0.2831958447934446,
+            "tender": {
+                "city": "",
+                "created_at": "2025-04-16T01:54:11.780751",
+                "duration": "15 days",
+                "id": 251,
+                "inquiry_deadline": "2025-04-25T00:00:00",
+                "main_activities": "\u062a\u062c\u0627\u0631\u0629 \u0642\u0637\u0639 \u0627\u0644\u063a\u064a\u0627\u0631 \u0627\u0644\u062c\u062f\u064a\u062f\u0629 ",
+                "opening_date": null,
+                "organization": "\u0627\u0644\u0645\u0624\u0633\u0633\u0629 \u0627\u0644\u0639\u0627\u0645\u0629 \u0644\u062a\u062d\u0644\u064a\u0629 \u0627\u0644\u0645\u064a\u0627\u0647 \u0627\u0644\u0645\u0627\u0644\u062d\u0629",
+                "price": "200.0",
+                "publication_date": "2025-04-15T00:00:00",
+                "reference_number": "60017118",
+                "submission_deadline": "2025-05-01T00:00:00",
+                "tender_id": "918991",
+                "tender_title": "\u062a\u0648\u0631\u064a\u062f \u0642\u0637\u0639 \u063a\u064a\u0627\u0631 \u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629 \u0644\u0645\u0646\u0638\u0648\u0645\u0629 \u0625\u0646\u062a\u0627\u062c \u064a\u0646\u0628\u0639 - 60017118",
+                "tender_type": "\u0634\u0631\u0627\u0621 \u0645\u0628\u0627\u0634\u0631",
+                "tender_url": "https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID=918991",
+                "updated_at": "2025-04-16T02:35:23.591258"
+            }
+        },
+        {
+            "similarity": 0.28064646951598293,
+            "tender": {
+                "city": "\u0627\u0644\u0634\u0631\u0642\u064a",
+                "created_at": "2025-04-16T01:54:02.707965",
+                "duration": "15 days",
+                "id": 183,
+                "inquiry_deadline": "2025-04-25T00:00:00",
+                "main_activities": "\u062a\u062c\u0627\u0631\u0629 \u0642\u0637\u0639 \u0627\u0644\u063a\u064a\u0627\u0631 \u0627\u0644\u062c\u062f\u064a\u062f\u0629 ",
+                "opening_date": null,
+                "organization": "\u0627\u0644\u0645\u0624\u0633\u0633\u0629 \u0627\u0644\u0639\u0627\u0645\u0629 \u0644\u062a\u062d\u0644\u064a\u0629 \u0627\u0644\u0645\u064a\u0627\u0647 \u0627\u0644\u0645\u0627\u0644\u062d\u0629",
+                "price": "200.0",
+                "publication_date": "2025-04-15T00:00:00",
+                "reference_number": "60017312",
+                "submission_deadline": "2025-05-01T00:00:00",
+                "tender_id": "928951",
+                "tender_title": "\u062a\u0648\u0631\u064a\u062f \u0639\u062f\u062f \u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629 \u0644\u0645\u0646\u0638\u0648\u0645\u0629 \u0627\u0646\u062a\u0627\u062c \u0631\u0623\u0633 \u0627\u0644\u062e\u064a\u0631  60017312 \u0627\u0644\u0633\u0627\u062d\u0644 \u0627\u0644\u0634\u0631\u0642\u064a  ",
+                "tender_type": "\u0634\u0631\u0627\u0621 \u0645\u0628\u0627\u0634\u0631",
+                "tender_url": "https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID=928951",
+                "updated_at": "2025-04-16T02:35:14.366133"
+            }
+        },
+        {
+            "similarity": 0.27705531486704116,
+            "tender": {
+                "city": "\u0627\u0644\u0634\u0631\u0642\u064a",
+                "created_at": "2025-04-16T01:54:01.809463",
+                "duration": "15 days",
+                "id": 176,
+                "inquiry_deadline": "2025-04-25T00:00:00",
+                "main_activities": "\u062a\u062c\u0627\u0631\u0629 \u0642\u0637\u0639 \u0627\u0644\u063a\u064a\u0627\u0631 \u0627\u0644\u062c\u062f\u064a\u062f\u0629 ",
+                "opening_date": null,
+                "organization": "\u0627\u0644\u0645\u0624\u0633\u0633\u0629 \u0627\u0644\u0639\u0627\u0645\u0629 \u0644\u062a\u062d\u0644\u064a\u0629 \u0627\u0644\u0645\u064a\u0627\u0647 \u0627\u0644\u0645\u0627\u0644\u062d\u0629",
+                "price": "200.0",
+                "publication_date": "2025-04-15T00:00:00",
+                "reference_number": "60017306",
+                "submission_deadline": "2025-05-01T00:00:00",
+                "tender_id": "928870",
+                "tender_title": "\u062a\u0648\u0631\u064a\u062f \u0627\u0646\u0627\u0631\u0629 \u0644\u0645\u0646\u0638\u0648\u0645\u0629 \u0627\u0646\u062a\u0627\u062c \u0631\u0623\u0633 \u0627\u0644\u062e\u064a\u0631 60017306 \u0627\u0644\u0633\u0627\u062d\u0644 \u0627\u0644\u0634\u0631\u0642\u064a ",
+                "tender_type": "\u0634\u0631\u0627\u0621 \u0645\u0628\u0627\u0634\u0631",
+                "tender_url": "https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID=928870",
+                "updated_at": "2025-04-16T02:35:13.437432"
+            }
+        },
+        {
+            "similarity": 0.2740282118320485,
+            "tender": {
+                "city": "\u062c\u062f\u0629",
+                "created_at": "2025-04-16T13:00:10.221849",
+                "duration": "19 days",
+                "id": 383,
+                "inquiry_deadline": "2025-04-28T00:00:00",
+                "main_activities": "\t\u0627\u0644\u062a\u0634\u063a\u064a\u0644 \u0648\u0627\u0644\u0635\u064a\u0627\u0646\u0629 \u0648\u0627\u0644\u0646\u0638\u0627\u0641\u0629 \u0644\u0644\u0645\u0646\u0634\u0622\u062a - \u0627\u0644\u062a\u0634\u063a\u064a\u0644 \u0648\u0627\u0644\u0635\u064a\u0627\u0646\u0629\t",
+                "opening_date": "2025-05-06T00:00:00",
+                "organization": "\u0627\u0644\u0645\u0624\u0633\u0633\u0629 \u0627\u0644\u0639\u0627\u0645\u0629 \u0644\u062a\u062d\u0644\u064a\u0629 \u0627\u0644\u0645\u064a\u0627\u0647 \u0627\u0644\u0645\u0627\u0644\u062d\u0629",
+                "price": "200.0",
+                "publication_date": "2025-04-16T00:00:00",
+                "reference_number": "707588",
+                "submission_deadline": "2025-05-06T00:00:00",
+                "tender_id": "927717",
+                "tender_title": "\u0627\u0633\u062a\u0628\u062f\u0627\u0644 \u0648\u062d\u062f\u0629 \u0627\u0644\u062a\u0643\u064a\u064a\u0641 \u0627\u0644\u0645\u062f\u0645\u062c\u0629 \u0628\u0645\u0628\u0646\u0649 \u063a\u0631\u0641\u0629 \u0627\u0644\u0642\u0648\u0627\u0637\u0639 \u0627\u0644\u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629 \u0644\u0645\u062f\u062e\u0644 \u0645\u064a\u0627\u0647 \u0627\u0644\u0628\u062d\u0631 \u0628\u0645\u0646\u0638\u0648\u0645\u0629 \u0625\u0646\u062a\u0627\u062c \u0627\u0644\u0645\u064a\u0627\u0647 \u0627\u0644\u0645\u062d\u0644\u0627\u0629 \u0628\u062c\u062f\u0629",
+                "tender_type": "\u0645\u0646\u0627\u0641\u0633\u0629 \u0639\u0627\u0645\u0629",
+                "tender_url": "https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID=927717",
+                "updated_at": "2025-04-17T06:54:05.317506"
+            }
+        },
+        {
+            "similarity": 0.27318007829545576,
+            "tender": {
+                "city": "",
+                "created_at": "2025-04-16T01:54:08.235381",
+                "duration": "15 days",
+                "id": 224,
+                "inquiry_deadline": "2025-04-25T00:00:00",
+                "main_activities": "\u062a\u062c\u0627\u0631\u0629 \u0642\u0637\u0639 \u0627\u0644\u063a\u064a\u0627\u0631 \u0627\u0644\u062c\u062f\u064a\u062f\u0629 ",
+                "opening_date": "2025-05-01T00:00:00",
+                "organization": "\u0627\u0644\u0645\u0624\u0633\u0633\u0629 \u0627\u0644\u0639\u0627\u0645\u0629 \u0644\u062a\u062d\u0644\u064a\u0629 \u0627\u0644\u0645\u064a\u0627\u0647 \u0627\u0644\u0645\u0627\u0644\u062d\u0629",
+                "price": "200.0",
+                "publication_date": "2025-04-15T00:00:00",
+                "reference_number": "60017123",
+                "submission_deadline": "2025-05-01T00:00:00",
+                "tender_id": "919017",
+                "tender_title": "\u062a\u0648\u0631\u064a\u062f \u0642\u0637\u0639 \u063a\u064a\u0627\u0631 \u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629 \u0644\u0623\u0646\u0638\u0645\u0629 \u0646\u0642\u0644 \u064a\u0646\u0628\u0639 - 60017123",
+                "tender_type": "\u0645\u0646\u0627\u0641\u0633\u0629 \u0639\u0627\u0645\u0629",
+                "tender_url": "https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID=919017",
+                "updated_at": "2025-04-16T02:35:20.070340"
+            }
+        },
+        {
+            "similarity": 0.2698893982237941,
+            "tender": {
+                "city": "\u0648\u0627\u0644\u0645\u0646\u0627\u0641\u0633\u0627\u062a",
+                "created_at": "2025-04-16T13:00:16.958216",
+                "duration": "7 days",
+                "id": 433,
+                "inquiry_deadline": "2025-04-22T00:00:00",
+                "main_activities": "\u062a\u062c\u0627\u0631\u0629 \u0627\u0644\u0623\u062f\u0648\u0627\u062a \u0648\u0627\u0644\u0622\u0644\u0627\u062a \u0648\u0627\u0644\u0623\u062c\u0647\u0632\u0629",
+                "opening_date": null,
+                "organization": "\u062c\u0627\u0645\u0639\u0629 \u0627\u0644\u0627\u0645\u0627\u0645 \u0645\u062d\u0645\u062f \u0628\u0646 \u0633\u0639\u0648\u062f",
+                "price": "200.0",
+                "publication_date": "2025-04-16T00:00:00",
+                "reference_number": "49/25",
+                "submission_deadline": "2025-04-24T00:00:00",
+                "tender_id": "930876",
+                "tender_title": "\u062a\u0648\u0631\u064a\u062f \u062a\u0648\u0635\u064a\u0644\u0627\u062a \u0643\u0647\u0631\u0628\u0627\u0626\u064a\u0629                                                     ",
+                "tender_type": "\u0634\u0631\u0627\u0621 \u0645\u0628\u0627\u0634\u0631",
+                "tender_url": "https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID=930876",
+                "updated_at": "2025-04-17T06:54:12.153736"
+            }
+        }
+    ],
+    "today_only": false
+}

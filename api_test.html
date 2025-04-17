@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etimad Tenders API Test</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <style>
+        .similarity-bar {
+            height: 20px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .similarity-text {
+            margin-left: 5px;
+            font-weight: bold;
+        }
+        .tender-card {
+            margin-bottom: 20px;
+            border-left: 5px solid;
+            transition: all 0.3s;
+        }
+        .tender-card:hover {
+            transform: translateX(5px);
+        }
+        .loading {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 0.25em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border .75s linear infinite;
+        }
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Etimad Tenders API Test</h1>
+        <p class="text-muted">This page demonstrates how to use the public Vector Search API</p>
+        
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <input type="text" id="searchQuery" class="form-control" placeholder="Enter search query (e.g., construction, solar power, water systems)">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" id="searchBtn">Search</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" id="todayOnly">
+                    <label class="form-check-label" for="todayOnly">Only tenders from the last 24 hours</label>
+                </div>
+            </div>
+        </div>
+        
+        <div id="loadingIndicator" class="text-center my-5 d-none">
+            <div class="loading"></div>
+            <p class="mt-3">Fetching tenders...</p>
+        </div>
+        
+        <div id="resultsSection" class="mt-4 d-none">
+            <h3>Search Results <span id="resultCount" class="badge bg-primary"></span></h3>
+            <p class="text-muted">Showing the most semantically similar tenders for query: <span id="queryDisplay" class="font-weight-bold"></span></p>
+            
+            <div id="results" class="mt-4">
+                <!-- Results will be inserted here -->
+            </div>
+        </div>
+        
+        <div id="errorSection" class="alert alert-danger mt-4 d-none">
+            <h4>Error</h4>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchBtn = document.getElementById('searchBtn');
+            const searchQuery = document.getElementById('searchQuery');
+            const todayOnly = document.getElementById('todayOnly');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const resultsSection = document.getElementById('resultsSection');
+            const errorSection = document.getElementById('errorSection');
+            const errorMessage = document.getElementById('errorMessage');
+            const results = document.getElementById('results');
+            const resultCount = document.getElementById('resultCount');
+            const queryDisplay = document.getElementById('queryDisplay');
+            
+            // Default search query
+            searchQuery.value = 'construction';
+            
+            // Function to get a color based on similarity score
+            function getColorForSimilarity(score) {
+                if (score >= 0.3) return '#198754'; // success
+                if (score >= 0.25) return '#0d6efd'; // primary
+                if (score >= 0.2) return '#6c757d'; // secondary
+                return '#dc3545'; // danger
+            }
+            
+            // Function to search tenders
+            function searchTenders() {
+                const query = searchQuery.value.trim();
+                if (!query) {
+                    alert('Please enter a search query');
+                    return;
+                }
+                
+                // Show loading indicator
+                loadingIndicator.classList.remove('d-none');
+                resultsSection.classList.add('d-none');
+                errorSection.classList.add('d-none');
+                
+                // API endpoint URL - using local endpoint for testing
+                const apiUrl = 'http://localhost:5000/api/vector-search';
+                
+                // Build query params
+                const params = new URLSearchParams({
+                    query: query,
+                    limit: 10,
+                    today_only: todayOnly.checked
+                });
+                
+                // Make the fetch request
+                fetch(`${apiUrl}?${params.toString()}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Hide loading indicator
+                        loadingIndicator.classList.add('d-none');
+                        
+                        // Show results section
+                        resultsSection.classList.remove('d-none');
+                        
+                        // Update query display
+                        queryDisplay.textContent = query;
+                        resultCount.textContent = data.count;
+                        
+                        // Clear previous results
+                        results.innerHTML = '';
+                        
+                        // Display results
+                        data.results.forEach((item, index) => {
+                            const tender = item.tender;
+                            const similarity = item.similarity;
+                            const color = getColorForSimilarity(similarity);
+                            
+                            const card = document.createElement('div');
+                            card.className = 'card tender-card mb-3';
+                            card.style.borderLeftColor = color;
+                            
+                            // Format tender deadline if available
+                            let deadlineStr = 'Not specified';
+                            if (tender.submission_deadline) {
+                                const deadline = new Date(tender.submission_deadline);
+                                deadlineStr = deadline.toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric',
+                                    timeZone: 'Asia/Riyadh' // Saudi Arabia timezone
+                                });
+                            }
+                            
+                            card.innerHTML = `
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Tender #${index + 1}</h5>
+                                    <div class="d-flex align-items-center">
+                                        <div class="similarity-bar" style="width: ${similarity * 100}px; background-color: ${color};"></div>
+                                        <span class="similarity-text">${(similarity * 100).toFixed(1)}%</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">${tender.tender_title || 'No Title'}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">${tender.organization || 'Unknown Organization'}</h6>
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <p><strong>Type:</strong> ${tender.tender_type || 'Not specified'}</p>
+                                            <p><strong>Deadline:</strong> ${deadlineStr}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Reference:</strong> ${tender.reference_number || 'Not specified'}</p>
+                                            <p><strong>Price:</strong> ${tender.price || 'Not specified'}</p>
+                                        </div>
+                                    </div>
+                                    ${tender.main_activities ? `<p><strong>Main Activities:</strong> ${tender.main_activities}</p>` : ''}
+                                </div>
+                                <div class="card-footer">
+                                    <a href="${tender.tender_url}" target="_blank" class="btn btn-sm btn-outline-primary">View Tender</a>
+                                </div>
+                            `;
+                            
+                            results.appendChild(card);
+                        });
+                    })
+                    .catch(error => {
+                        // Hide loading indicator
+                        loadingIndicator.classList.add('d-none');
+                        
+                        // Show error section
+                        errorSection.classList.remove('d-none');
+                        errorMessage.textContent = error.message;
+                        console.error('Error:', error);
+                    });
+            }
+            
+            // Add event listeners
+            searchBtn.addEventListener('click', searchTenders);
+            searchQuery.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchTenders();
+                }
+            });
+            
+            // Auto-search on page load
+            setTimeout(searchTenders, 500);
+        });
+    </script>
+</body>
+</html>

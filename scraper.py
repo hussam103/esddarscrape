@@ -24,6 +24,8 @@ class EtimadScraper:
     BASE_URL = "https://tenders.etimad.sa"
     API_ENDPOINT = "/Tender/AllSupplierTendersForVisitorAsync"
     TENDER_DETAILS_URL = "/Tender/TenderDetails/"
+    # Default page size set to 24 tenders
+    DEFAULT_PAGE_SIZE = 24
     
     def __init__(self):
         # Set up headers to mimic a browser
@@ -51,7 +53,7 @@ class EtimadScraper:
         # Parameters for API request
         params = {
             'pageNumber': page_num,
-            'pageSize': 300,  # Get 300 tenders at once
+            'pageSize': self.DEFAULT_PAGE_SIZE,  # Get only 24 tenders at once
         }
         
         api_url = f"{self.BASE_URL}{self.API_ENDPOINT}"

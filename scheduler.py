@@ -15,11 +15,11 @@ def init_scheduler(app: Flask):
     """Initialize the scheduler to run the scraper and embedding jobs"""
     scheduler = BackgroundScheduler()
     
-    # Schedule the scraper to run at 10 AM, 12 PM, 2 PM, and 1 AM (Saudi Arabia time, GMT+3)
-    # This is equivalent to 7 AM, 9 AM, 11 AM, and 10 PM UTC
+    # Schedule the scraper to run every minute to fetch page 1 with 24 tenders
     scheduler.add_job(
         func=run_scraper_with_app_context(app),
-        trigger=CronTrigger(hour='10,12,14,1', minute='0', timezone=SAUDI_TIMEZONE),
+        trigger='interval',
+        minutes=1,
         id='scraper_job',
         name='Scrape Etimad Tenders',
         replace_existing=True
@@ -78,7 +78,7 @@ def init_scheduler(app: Flask):
     
     # Start the scheduler
     scheduler.start()
-    logger.info("Scheduler started, scraper will run at 10 AM, 12 PM, 2 PM, and 1 AM (Saudi Arabia time, GMT+3)")
+    logger.info("Scheduler started, scraper will run every minute fetching 24 tenders from page 1")
     logger.info("Embeddings generator will run at 10 AM, 6 PM, and 2 AM (Saudi Arabia time, GMT+3)")
     logger.info("Expired embeddings cleanup will run daily at 8 AM (Saudi Arabia time, GMT+3)")
     logger.info("Initial scrape will run in the background after startup")

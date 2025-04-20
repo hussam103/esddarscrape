@@ -41,18 +41,17 @@ class EtimadScraper:
         self.session = requests.Session()
     
     def fetch_tenders(self):
-        """Fetch tenders from the API for page 1 only"""
-        all_tenders = []
-        
-        # Fetch page 1 only
+        """Fetch tenders from the API"""
         tenders = []
+        
+        # Just get page 1 with a large batch size
         page_num = 1
         logger.info(f"Fetching page {page_num}")
         
         # Parameters for API request
         params = {
             'pageNumber': page_num,
-            'pageSize': 24,  # Fetch 24 tenders per page as requested
+            'pageSize': 300,  # Get 300 tenders at once
         }
         
         api_url = f"{self.BASE_URL}{self.API_ENDPOINT}"
@@ -69,17 +68,17 @@ class EtimadScraper:
             )
             
             if response.status_code == 200:
-                logger.info(f"Successfully got response from API endpoint for page {page_num}")
+                logger.info(f"Successfully got response from API endpoint")
                 
                 try:
                     # Parse the JSON response
                     api_data = json.loads(response.text)
-                    logger.info(f"Successfully parsed JSON from API response for page {page_num}")
+                    logger.info(f"Successfully parsed JSON from API response")
                     
                     # Extract tender data based on expected structure
                     if 'data' in api_data and isinstance(api_data['data'], list):
                         tender_items = api_data['data']
-                        logger.info(f"Found {len(tender_items)} items in API response for page {page_num}")
+                        logger.info(f"Found {len(tender_items)} items in API response")
                         
                         # Process each tender item
                         for item in tender_items:
@@ -166,24 +165,20 @@ class EtimadScraper:
                                 logger.error(f"Error processing tender item: {e}")
                                 continue
                     else:
-                        logger.warning(f"Invalid response format for page {page_num} - no data field or not a list")
+                        logger.warning(f"Invalid response format - no data field or not a list")
                         
                 except Exception as e:
-                    logger.error(f"Error parsing API response for page {page_num}: {e}")
+                    logger.error(f"Error parsing API response: {e}")
             else:
-                logger.error(f"Bad response status for page {page_num}: {response.status_code}")
+                logger.error(f"Bad response status: {response.status_code}")
                 logger.debug(f"Response content: {response.text[:500]}...")
                 
         except requests.exceptions.Timeout:
-            logger.error(f"Request timed out for page {page_num}")
+            logger.error(f"Request timed out")
         except Exception as e:
-            logger.error(f"Error fetching tenders for page {page_num}: {e}")
-        
-        logger.info(f"Found {len(tenders)} valid tenders on page {page_num}")
-        all_tenders.extend(tenders)
-        
-        logger.info(f"Total tenders fetched from all pages: {len(all_tenders)}")
-        return all_tenders
+            logger.error(f"Error fetching tenders: {e}")
+            
+        return tenders
     
     def save_tenders_to_db(self, tenders):
         """Save tenders to the database using batch processing to improve reliability"""

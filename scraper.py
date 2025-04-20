@@ -41,150 +41,147 @@ class EtimadScraper:
         self.session = requests.Session()
     
     def fetch_tenders(self):
-        """Fetch tenders from the API for both page 1 and page 2"""
+        """Fetch tenders from the API for page 1 only"""
         all_tenders = []
         
-        # Fetch both page 1 and page 2
-        for page_num in [1, 2]:
-            tenders = []
-            logger.info(f"Fetching page {page_num}")
+        # Fetch page 1 only
+        tenders = []
+        page_num = 1
+        logger.info(f"Fetching page {page_num}")
+        
+        # Parameters for API request
+        params = {
+            'pageNumber': page_num,
+            'pageSize': 24,  # Fetch 24 tenders per page as requested
+        }
+        
+        api_url = f"{self.BASE_URL}{self.API_ENDPOINT}"
+        logger.info(f"Making request to {api_url} with params: {params}")
+        
+        try:
+            # Make the request
+            response = self.session.get(
+                api_url,
+                params=params,
+                headers=self.headers,
+                timeout=30,
+                verify=False  # Skip SSL verification
+            )
             
-            # Parameters for API request
-            params = {
-                'pageNumber': page_num,
-                'pageSize': 24,  # Fetch 24 tenders per page as requested
-            }
-            
-            api_url = f"{self.BASE_URL}{self.API_ENDPOINT}"
-            logger.info(f"Making request to {api_url} with params: {params}")
-            
-            try:
-                # Make the request
-                response = self.session.get(
-                    api_url,
-                    params=params,
-                    headers=self.headers,
-                    timeout=30,
-                    verify=False  # Skip SSL verification
-                )
+            if response.status_code == 200:
+                logger.info(f"Successfully got response from API endpoint for page {page_num}")
                 
-                if response.status_code == 200:
-                    logger.info(f"Successfully got response from API endpoint for page {page_num}")
+                try:
+                    # Parse the JSON response
+                    api_data = json.loads(response.text)
+                    logger.info(f"Successfully parsed JSON from API response for page {page_num}")
                     
-                    try:
-                        # Parse the JSON response
-                        api_data = json.loads(response.text)
-                        logger.info(f"Successfully parsed JSON from API response for page {page_num}")
+                    # Extract tender data based on expected structure
+                    if 'data' in api_data and isinstance(api_data['data'], list):
+                        tender_items = api_data['data']
+                        logger.info(f"Found {len(tender_items)} items in API response for page {page_num}")
                         
-                        # Extract tender data based on expected structure
-                        if 'data' in api_data and isinstance(api_data['data'], list):
-                            tender_items = api_data['data']
-                            logger.info(f"Found {len(tender_items)} items in API response for page {page_num}")
-                            
-                            # Process each tender item
-                            for item in tender_items:
-                                try:
-                                    # Extract required fields
-                                    tender_id = str(item.get('tenderId', ''))
-                                    tender_title = item.get('tenderName', '')
-                                    organization = item.get('agencyName', 'Unknown')
-                                    tender_type = item.get('tenderTypeName', 'Unknown')
+                        # Process each tender item
+                        for item in tender_items:
+                            try:
+                                # Extract required fields
+                                tender_id = str(item.get('tenderId', ''))
+                                tender_title = item.get('tenderName', '')
+                                organization = item.get('agencyName', 'Unknown')
+                                tender_type = item.get('tenderTypeName', 'Unknown')
+                                
+                                # Extract main activities and duration
+                                main_activities = item.get('tenderActivityName', '')
+                                duration = str(item.get('remainingDays', '')) + ' days'
+                                reference_number = item.get('tenderNumber', '')
+                                
+                                # Try to get city and price information
+                                city = item.get('branchName', '').split(' ')[-1] if item.get('branchName') else ''
+                                price = str(item.get('invitationCost', '')) if item.get('invitationCost') else str(item.get('financialFees', ''))
+                                
+                                # Process dates
+                                publication_date = None
+                                if 'submitionDate' in item and item['submitionDate']:
+                                    try:
+                                        date_str = item['submitionDate']
+                                        if isinstance(date_str, str) and 'T' in date_str:
+                                            date_str = date_str.split('T')[0]
+                                        publication_date = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+                                    except Exception as e:
+                                        logger.warning(f"Error parsing publication date: {e}")
+                                
+                                inquiry_deadline = None
+                                if 'lastEnqueriesDate' in item and item['lastEnqueriesDate']:
+                                    try:
+                                        date_str = item['lastEnqueriesDate']
+                                        if isinstance(date_str, str) and 'T' in date_str:
+                                            date_str = date_str.split('T')[0]
+                                        inquiry_deadline = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+                                    except Exception as e:
+                                        logger.warning(f"Error parsing inquiry deadline: {e}")
+                                
+                                submission_deadline = None
+                                if 'lastOfferPresentationDate' in item and item['lastOfferPresentationDate']:
+                                    try:
+                                        date_str = item['lastOfferPresentationDate']
+                                        if isinstance(date_str, str) and 'T' in date_str:
+                                            date_str = date_str.split('T')[0]
+                                        submission_deadline = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+                                    except Exception as e:
+                                        logger.warning(f"Error parsing submission deadline: {e}")
+                                
+                                opening_date = None
+                                if 'offersOpeningDate' in item and item['offersOpeningDate']:
+                                    try:
+                                        date_str = item['offersOpeningDate']
+                                        if isinstance(date_str, str) and 'T' in date_str:
+                                            date_str = date_str.split('T')[0]
+                                        opening_date = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+                                    except Exception as e:
+                                        logger.warning(f"Error parsing opening date: {e}")
+                                
+                                # Construct URL with the specific format you requested
+                                url = f"{self.BASE_URL}/Tender/DetaielsForVisitors?StenderID={tender_id}" if tender_id else ""
+                                
+                                # Only add valid tenders
+                                if tender_id and tender_title:
+                                    tenders.append({
+                                        'tender_id': tender_id,
+                                        'tender_title': tender_title,
+                                        'organization': organization,
+                                        'tender_type': tender_type,
+                                        'main_activities': main_activities,
+                                        'duration': duration,
+                                        'reference_number': reference_number,
+                                        'publication_date': publication_date,
+                                        'inquiry_deadline': inquiry_deadline,
+                                        'submission_deadline': submission_deadline,
+                                        'opening_date': opening_date,
+                                        'tender_url': url,
+                                        'city': city,
+                                        'price': price
+                                    })
                                     
-                                    # Extract main activities and duration
-                                    main_activities = item.get('tenderActivityName', '')
-                                    duration = str(item.get('remainingDays', '')) + ' days'
-                                    reference_number = item.get('tenderNumber', '')
-                                    
-                                    # Try to get city and price information
-                                    city = item.get('branchName', '').split(' ')[-1] if item.get('branchName') else ''
-                                    price = str(item.get('invitationCost', '')) if item.get('invitationCost') else str(item.get('financialFees', ''))
-                                    
-                                    # Process dates
-                                    publication_date = None
-                                    if 'submitionDate' in item and item['submitionDate']:
-                                        try:
-                                            date_str = item['submitionDate']
-                                            if isinstance(date_str, str) and 'T' in date_str:
-                                                date_str = date_str.split('T')[0]
-                                            publication_date = datetime.datetime.strptime(date_str, '%Y-%m-%d')
-                                        except Exception as e:
-                                            logger.warning(f"Error parsing publication date: {e}")
-                                    
-                                    inquiry_deadline = None
-                                    if 'lastEnqueriesDate' in item and item['lastEnqueriesDate']:
-                                        try:
-                                            date_str = item['lastEnqueriesDate']
-                                            if isinstance(date_str, str) and 'T' in date_str:
-                                                date_str = date_str.split('T')[0]
-                                            inquiry_deadline = datetime.datetime.strptime(date_str, '%Y-%m-%d')
-                                        except Exception as e:
-                                            logger.warning(f"Error parsing inquiry deadline: {e}")
-                                    
-                                    submission_deadline = None
-                                    if 'lastOfferPresentationDate' in item and item['lastOfferPresentationDate']:
-                                        try:
-                                            date_str = item['lastOfferPresentationDate']
-                                            if isinstance(date_str, str) and 'T' in date_str:
-                                                date_str = date_str.split('T')[0]
-                                            submission_deadline = datetime.datetime.strptime(date_str, '%Y-%m-%d')
-                                        except Exception as e:
-                                            logger.warning(f"Error parsing submission deadline: {e}")
-                                    
-                                    opening_date = None
-                                    if 'offersOpeningDate' in item and item['offersOpeningDate']:
-                                        try:
-                                            date_str = item['offersOpeningDate']
-                                            if isinstance(date_str, str) and 'T' in date_str:
-                                                date_str = date_str.split('T')[0]
-                                            opening_date = datetime.datetime.strptime(date_str, '%Y-%m-%d')
-                                        except Exception as e:
-                                            logger.warning(f"Error parsing opening date: {e}")
-                                    
-                                    # Construct URL with the specific format you requested
-                                    url = f"{self.BASE_URL}/Tender/DetaielsForVisitors?StenderID={tender_id}" if tender_id else ""
-                                    
-                                    # Only add valid tenders
-                                    if tender_id and tender_title:
-                                        tenders.append({
-                                            'tender_id': tender_id,
-                                            'tender_title': tender_title,
-                                            'organization': organization,
-                                            'tender_type': tender_type,
-                                            'main_activities': main_activities,
-                                            'duration': duration,
-                                            'reference_number': reference_number,
-                                            'publication_date': publication_date,
-                                            'inquiry_deadline': inquiry_deadline,
-                                            'submission_deadline': submission_deadline,
-                                            'opening_date': opening_date,
-                                            'tender_url': url,
-                                            'city': city,
-                                            'price': price
-                                        })
-                                        
-                                except Exception as e:
-                                    logger.error(f"Error processing tender item: {e}")
-                                    continue
-                        else:
-                            logger.warning(f"Invalid response format for page {page_num} - no data field or not a list")
-                            
-                    except Exception as e:
-                        logger.error(f"Error parsing API response for page {page_num}: {e}")
-                else:
-                    logger.error(f"Bad response status for page {page_num}: {response.status_code}")
-                    logger.debug(f"Response content: {response.text[:500]}...")
-                    
-            except requests.exceptions.Timeout:
-                logger.error(f"Request timed out for page {page_num}")
-            except Exception as e:
-                logger.error(f"Error fetching tenders for page {page_num}: {e}")
-            
-            logger.info(f"Found {len(tenders)} valid tenders on page {page_num}")
-            all_tenders.extend(tenders)
-            
-            # Add a small delay between page requests to avoid overloading the server
-            time.sleep(1)
-            
+                            except Exception as e:
+                                logger.error(f"Error processing tender item: {e}")
+                                continue
+                    else:
+                        logger.warning(f"Invalid response format for page {page_num} - no data field or not a list")
+                        
+                except Exception as e:
+                    logger.error(f"Error parsing API response for page {page_num}: {e}")
+            else:
+                logger.error(f"Bad response status for page {page_num}: {response.status_code}")
+                logger.debug(f"Response content: {response.text[:500]}...")
+                
+        except requests.exceptions.Timeout:
+            logger.error(f"Request timed out for page {page_num}")
+        except Exception as e:
+            logger.error(f"Error fetching tenders for page {page_num}: {e}")
+        
+        logger.info(f"Found {len(tenders)} valid tenders on page {page_num}")
+        all_tenders.extend(tenders)
+        
         logger.info(f"Total tenders fetched from all pages: {len(all_tenders)}")
         return all_tenders
     

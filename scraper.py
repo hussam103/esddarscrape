@@ -52,7 +52,7 @@ class EtimadScraper:
             # Parameters for API request
             params = {
                 'pageNumber': page_num,
-                'pageSize': 300,  # Keep 300 tenders per page for comprehensive coverage
+                'pageSize': 24,  # Fetch 24 tenders per page as requested
             }
             
             api_url = f"{self.BASE_URL}{self.API_ENDPOINT}"

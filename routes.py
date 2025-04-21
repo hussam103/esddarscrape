@@ -406,7 +406,11 @@ def register_routes(app):
             def run_update_urls():
                 with app.app_context():
                     try:
-                        updated_count = update_tender_urls()
+                        # Get limit parameter from request, default to 100 to avoid overloading
+                        limit = request.json.get('limit', 100) if request.is_json else 100
+                        logger.info(f"Starting tender URL update with limit: {limit}")
+                        
+                        updated_count = update_tender_urls(limit=limit)
                         logger.info(f"Successfully updated {updated_count} tender URLs")
                     except Exception as e:
                         logger.error(f"Error during tender URL update: {str(e)}")

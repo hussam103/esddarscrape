@@ -537,7 +537,8 @@ function updateTenderUrls() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ limit: 50 }) // Process 50 tenders at a time
     })
         .then(response => {
             if (!response.ok) {

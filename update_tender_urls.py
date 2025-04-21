@@ -248,8 +248,9 @@ def update_tender_urls(limit=None):
                         # Continue with search as fallback
                         pass
                         
-                # Search for the tender by title to get the actual URL
-                search_result_url = search_tender_by_title(tender.tender_title)
+                # Search for the tender by title and pass the tender_id to prioritize exact matches
+                tender_id_str = tender.tender_id if isinstance(tender.tender_id, str) else str(tender.tender_id)
+                search_result_url = search_tender_by_title(tender.tender_title, target_tender_id=tender_id_str)
                 
                 # If we found a URL from search, use it, otherwise skip this tender
                 if search_result_url:

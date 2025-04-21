@@ -49,17 +49,32 @@ def search_tender_by_title(tender_title):
         # URL encode the search term
         encoded_search = urllib.parse.quote(tender_title)
         
-        # Generate a direct search URL using the correct format
-        # This uses the AllTendersForVisitor endpoint with the MultipleSearch parameter
+        # Create a compact search URL that will fit in the 500-character limit
+        # This still uses the AllTendersForVisitor endpoint with MultipleSearch parameter
+        # but omits most of the optional parameters to keep the URL short
         base_url = "https://tenders.etimad.sa/Tender/AllTendersForVisitor"
-        search_url = (f"{base_url}?&MultipleSearch={encoded_search}&TenderCategory=&TenderActivityId=0"
-                      f"&ReferenceNumber=&TenderNumber=&agency=&ConditionaBookletRange=&PublishDateId=5"
-                      f"&LastOfferPresentationDate=&LastOfferPresentationDate=&TenderAreasIdString="
-                      f"&TenderTypeId=&TenderActivityId=&TenderSubActivityId=&AgencyCode="
-                      f"&FromLastOfferPresentationDateString=&ToLastOfferPresentationDateString="
-                      f"&SortDirection=DESC&Sort=SubmitionDate&PageSize=6&IsSearch=true"
-                      f"&ConditionaBookletRange=&PublishDateId=5&PageNumber=1")
+        search_url = f"{base_url}?MultipleSearch={encoded_search}&IsSearch=true&PageSize=6"
         
+        # Check if the URL is too long (over 490 chars to leave some margin)
+        if len(search_url) > 490:
+            # If too long, truncate the search term by taking key words from the title
+            # Take first 3 words and last 2 words to capture the most important parts
+            words = tender_title.split()
+            if len(words) > 5:
+                # For titles with more than 5 words, take first 3 and last 2
+                search_term = " ".join(words[:3] + words[-2:])
+            else:
+                # For shorter titles, take first 3 words (or all if fewer)
+                search_term = " ".join(words[:min(3, len(words))])
+                
+            # URL encode the shorter search term
+            encoded_search = urllib.parse.quote(search_term)
+            
+            # Regenerate the URL with the shorter search term
+            search_url = f"{base_url}?MultipleSearch={encoded_search}&IsSearch=true&PageSize=6"
+            logger.info(f"Original URL too long, using truncated search term: '{search_term}'")
+        
+        # Log the final URL
         logger.info(f"Created search URL for tender title: '{tender_title}'")
         logger.info(f"Search URL: {search_url}")
         

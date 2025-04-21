@@ -394,3 +394,32 @@ def register_routes(app):
         except Exception as e:
             logger.error(f"Error starting vector migration: {str(e)}")
             return jsonify({'error': str(e)}), 500
+            
+    @app.route('/api/update-tender-urls', methods=['POST'])
+    def api_update_tender_urls():
+        """API endpoint to update tender URLs by searching on Etimad website"""
+        try:
+            # Import the update URLs module
+            from update_tender_urls import update_tender_urls
+            
+            # Run the process in a background thread to avoid timeouts
+            def run_update_urls():
+                with app.app_context():
+                    try:
+                        updated_count = update_tender_urls()
+                        logger.info(f"Successfully updated {updated_count} tender URLs")
+                    except Exception as e:
+                        logger.error(f"Error during tender URL update: {str(e)}")
+            
+            # Start the update in a background thread
+            thread = threading.Thread(target=run_update_urls)
+            thread.daemon = True
+            thread.start()
+            
+            return jsonify({
+                'status': 'success',
+                'message': 'Started updating tender URLs. This process will run in the background and may take some time.'
+            })
+        except Exception as e:
+            logger.error(f"Error starting tender URL update: {str(e)}")
+            return jsonify({'error': str(e)}), 500

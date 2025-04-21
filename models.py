@@ -61,7 +61,7 @@ class TenderEmbedding(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     tender_id = db.Column(db.String(255), db.ForeignKey('tenders.tender_id', ondelete='CASCADE'), nullable=False, unique=True)
-    embedding = db.Column(Vector(3072))  # 3072 dimensions for text-embedding-3-large
+    embedding = db.Column(Vector(1536))  # 1536 dimensions for text-embedding-3-small
     created_at = db.Column(db.DateTime, default=get_saudi_now)
     
     # Relationship to the tender

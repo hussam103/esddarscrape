@@ -13,7 +13,7 @@ from utils import get_saudi_now, get_saudi_time_hours_ago
 
 # The newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # Do not change this unless explicitly requested by the user
-EMBEDDING_MODEL = "text-embedding-3-large"  # 3072 dimensions
+EMBEDDING_MODEL = "text-embedding-3-small"  # 1536 dimensions
 MAX_BATCH_SIZE = 50  # Process embeddings in batches
 
 # Configure logging
@@ -28,19 +28,19 @@ def create_embedding(text):
     if not text or len(text.strip()) == 0:
         logger.warning(f"Empty text provided for embedding")
         # Return a zero vector if text is empty
-        return np.zeros(3072).tolist()
+        return np.zeros(1536).tolist()
     
     try:
         response = client.embeddings.create(
             model=EMBEDDING_MODEL,
             input=text,
-            dimensions=3072
+            dimensions=1536
         )
         return response.data[0].embedding
     except Exception as e:
         logger.error(f"Error creating embedding: {str(e)}")
         # Return a zero vector in case of error
-        return np.zeros(3072).tolist()
+        return np.zeros(1536).tolist()
 
 def embed_tender(tender):
     """Create and store embedding for a single tender"""
@@ -116,7 +116,7 @@ def batch_embed_tenders(limit=None):
             response = client.embeddings.create(
                 model=EMBEDDING_MODEL,
                 input=batch_texts,
-                dimensions=3072
+                dimensions=1536
             )
             
             # Store embeddings

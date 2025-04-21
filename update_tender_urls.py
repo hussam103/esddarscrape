@@ -30,124 +30,39 @@ HEADERS = {
     "Cache-Control": "max-age=0"
 }
 
-def search_tender_by_title(tender_title, target_tender_id=None):
+def search_tender_by_title(tender_title):
     """
-    Search for a tender on Etimad website by its title
+    Create a search URL for a tender on Etimad website based on its title
     
     Args:
         tender_title (str): The title of the tender to search for
-        target_tender_id (str, optional): The tender ID we're looking for, to prioritize exact matches
         
     Returns:
-        str: The tender URL if found, None otherwise
+        str: The search results URL for the tender title
     """
     if not tender_title or len(tender_title.strip()) < 5:
         logger.warning(f"Tender title too short or empty: '{tender_title}'")
         return None
         
     try:
-        # Try to find a good search term - use the first 3-5 words of the title
-        # This improves search results by focusing on distinctive words
+        # Take the first 5 words (or all words if fewer) for the search term
         words = tender_title.split()
         search_term = " ".join(words[:min(5, len(words))])
         
-        # Create search parameters like the scraper does
-        params = {
-            'pageNumber': 1,
-            'pageSize': 24,
-            'SearchText': search_term
-        }
+        # URL encode the search term
+        encoded_search = urllib.parse.quote(search_term)
         
-        # Use the same endpoint as the scraper
-        search_url = "https://tenders.etimad.sa/Tender/AllSupplierTendersForVisitorAsync"
+        # Generate a direct search URL with the encoded search term
+        # This links directly to the search results page for the tender title
+        search_url = f"https://tenders.etimad.sa/Tender/List?SearchText={encoded_search}"
         
-        logger.info(f"Searching for tender with term: '{search_term}'")
+        logger.info(f"Created search URL for tender title: '{search_term}'")
         logger.info(f"Search URL: {search_url}")
         
-        # Make request with longer timeout for search
-        response = requests.get(
-            search_url, 
-            params=params,
-            headers=HEADERS, 
-            timeout=60
-        )
-        
-        if response.status_code != 200:
-            logger.error(f"Failed to search for tender: {tender_title}. Status code: {response.status_code}")
-            return None
-        
-        # Parse JSON response
-        data = response.json()
-        
-        # Check if we got any search results
-        if not data or 'data' not in data or not data['data']:
-            logger.warning(f"No search results found for tender: {tender_title}")
-            return None
-            
-        # Extract tender data from JSON
-        tenders_data = data['data']
-        logger.info(f"Found {len(tenders_data)} potential matches")
-        
-        # Store tenders along with their match scores
-        matches = []
-        
-        # Check if we have a target tender ID we're trying to match exactly
-        if target_tender_id:
-            logger.info(f"Looking for exact match with target tender ID: {target_tender_id}")
-        
-        for t in tenders_data:
-            tender_id = t.get('tenderId')  # This is the correct field from the API
-            title = t.get('tenderName', '')
-            
-            if not tender_id or not title:
-                continue
-                
-            # Construct the direct URL to the tender
-            url = f"https://tenders.etimad.sa/Tender/TenderDetails/{tender_id}"
-            
-            # If we have a target tender ID and this result matches it exactly, just return it immediately
-            if target_tender_id and str(tender_id) == str(target_tender_id):
-                logger.info(f"Found exact match for target tender ID {target_tender_id}: {url}")
-                return url
-            
-            # Otherwise calculate similarity score
-            # Simple similarity: count of common words
-            tender_words = set(tender_title.lower().split())
-            result_words = set(title.lower().split())
-            common_words = tender_words.intersection(result_words)
-            
-            # Score based on common words and length similarity
-            score = len(common_words) / max(len(tender_words), len(result_words))
-            
-            logger.debug(f"Match score for '{title}': {score:.2f}")
-            matches.append({
-                'title': title,
-                'url': url,
-                'score': score,
-                'tender_id': tender_id
-            })
-        
-        # If we didn't find any valid matches
-        if not matches:
-            logger.warning(f"No valid matches found for tender: {tender_title}")
-            return None
-            
-        # Sort matches by score, highest first
-        matches.sort(key=lambda x: x['score'], reverse=True)
-        best_match = matches[0]
-        
-        # Consider it a match if the score is above a reasonable threshold
-        threshold = 0.2  # Lower threshold to allow more matches
-        if best_match['score'] > threshold:
-            logger.info(f"Found URL for tender with score {best_match['score']:.2f}: {best_match['url']}")
-            return best_match['url']
-        else:
-            # If no good match, use the first result as a fallback
-            logger.warning(f"No strong match found, using first result: {best_match['url']}")
-            return best_match['url']
+        return search_url
             
     except Exception as e:
-        logger.error(f"Error searching for tender: {tender_title}. Error: {str(e)}")
+        logger.error(f"Error generating search URL for tender: {tender_title}. Error: {str(e)}")
         return None
 
 def update_tender_urls(limit=None):
@@ -248,9 +163,8 @@ def update_tender_urls(limit=None):
                         # Continue with search as fallback
                         pass
                         
-                # Search for the tender by title and pass the tender_id to prioritize exact matches
-                tender_id_str = tender.tender_id if isinstance(tender.tender_id, str) else str(tender.tender_id)
-                search_result_url = search_tender_by_title(tender.tender_title, target_tender_id=tender_id_str)
+                # Search for the tender by title to get a search URL
+                search_result_url = search_tender_by_title(tender.tender_title)
                 
                 # If we found a URL from search, use it, otherwise skip this tender
                 if search_result_url:

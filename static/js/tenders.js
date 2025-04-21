@@ -521,9 +521,13 @@ function updateTableWithVectorResults() {
 function updateTenderUrls() {
     const button = document.getElementById('update-tender-urls');
     const statusContainer = document.getElementById('vector-status');
+    const limitInput = document.getElementById('url-update-limit');
     
-    // Show confirmation dialog
-    if (!confirm('This will update all tender URLs to the correct format. This operation may take some time. Continue?')) {
+    // Get the limit value from the input field
+    const limit = parseInt(limitInput.value, 10) || 50;
+    
+    // Show confirmation dialog with the limit included
+    if (!confirm(`This will update up to ${limit} tender URLs to the correct format. This operation may take some time. Continue?`)) {
         return;
     }
     
@@ -531,14 +535,14 @@ function updateTenderUrls() {
     button.setAttribute('disabled', 'disabled');
     button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating URLs...';
     
-    statusContainer.innerHTML = '<div class="alert alert-info">Updating tender URLs. This may take some time...</div>';
+    statusContainer.innerHTML = `<div class="alert alert-info">Updating up to ${limit} tender URLs. This may take some time...</div>`;
     
     fetch('/api/update-tender-urls', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ limit: 50 }) // Process 50 tenders at a time
+        body: JSON.stringify({ limit: limit }) // Process tenders based on user input
     })
         .then(response => {
             if (!response.ok) {

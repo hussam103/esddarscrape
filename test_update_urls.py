@@ -1,8 +1,10 @@
 """
 Test script for updating tender URLs
 """
-import requests
 import logging
+from app import app
+from update_tender_urls import update_tender_urls
+from models import Tender, db
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -10,34 +12,48 @@ logger = logging.getLogger(__name__)
 
 def test_update_urls():
     """Test the update tender URLs API endpoint"""
-    try:
-        # The endpoint URL
-        url = "http://localhost:5000/api/update-tender-urls"
+    with app.app_context():
+        print("Testing tender URL update process...")
         
-        logger.info("Starting URL update test...")
+        # Get count of tenders with no URL or placeholder URL before update
+        missing_urls_before = (
+            Tender.query.filter(
+                (Tender.tender_url == None) | 
+                (Tender.tender_url == '') | 
+                (Tender.tender_url.like('%StenderID=%5BID%5D%'))
+            ).count()
+        )
+        print(f"Tenders with missing or placeholder URLs before update: {missing_urls_before}")
         
-        # Make the request
-        response = requests.post(url)
+        # Limit to 5 tenders to avoid timeouts
+        limit = 5
+        print(f"Updating up to {limit} tender URLs...")
         
-        # Check status code
-        if response.status_code == 200:
-            data = response.json()
-            logger.info(f"Response: {data}")
-            
-            if 'status' in data and data['status'] == 'success':
-                logger.info("URL update started successfully")
-                return True
-            else:
-                logger.error(f"Unexpected response: {data}")
-                return False
-        else:
-            logger.error(f"Request failed with status code: {response.status_code}")
-            logger.error(f"Response content: {response.text}")
-            return False
-            
-    except Exception as e:
-        logger.error(f"Error: {str(e)}")
-        return False
-    
+        # Run the update function
+        updated_count = update_tender_urls(limit=limit)
+        
+        print(f"Successfully updated {updated_count} tender URLs")
+        
+        # Get count of tenders with no URL or placeholder URL after update
+        missing_urls_after = (
+            Tender.query.filter(
+                (Tender.tender_url == None) | 
+                (Tender.tender_url == '') | 
+                (Tender.tender_url.like('%StenderID=%5BID%5D%'))
+            ).count()
+        )
+        print(f"Tenders with missing or placeholder URLs after update: {missing_urls_after}")
+        
+        # Get a few examples of updated URLs
+        updated_tenders = Tender.query.filter(
+            Tender.tender_url.like('https://tenders.etimad.sa/Tender/TenderDetails/%')
+        ).limit(3).all()
+        
+        print("\nExample updated tender URLs:")
+        for tender in updated_tenders:
+            print(f"- {tender.tender_id}: {tender.tender_title[:50]}... --> {tender.tender_url}")
+        
+        print("\nTest completed")
+
 if __name__ == "__main__":
     test_update_urls()

@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 # Etimad website base URL
 ETIMAD_BASE_URL = "https://tenders.etimad.sa"
-ETIMAD_SEARCH_URL = "https://tenders.etimad.sa/Tender/GetTendersForVisitor"
 
 # Sleep time between requests to avoid rate limiting
 SLEEP_TIME = 2
@@ -51,24 +50,22 @@ def search_tender_by_title(tender_title):
         words = tender_title.split()
         search_term = " ".join(words[:min(5, len(words))])
         
-        # Create API search parameters
+        # Create search parameters like the scraper does
         params = {
             'pageNumber': 1,
             'pageSize': 24,
-            'tenderStatusId': None,
-            'tenderTypeId': None,
-            'tenderActivityId': None,
-            'searchText': search_term,
-            'fromDate': None,
-            'toDate': None
+            'SearchText': search_term
         }
         
+        # Use the same endpoint as the scraper
+        search_url = "https://tenders.etimad.sa/Tender/AllSupplierTendersForVisitorAsync"
+        
         logger.info(f"Searching for tender with term: '{search_term}'")
-        logger.info(f"Search URL: {ETIMAD_SEARCH_URL}")
+        logger.info(f"Search URL: {search_url}")
         
         # Make request with longer timeout for search
         response = requests.get(
-            ETIMAD_SEARCH_URL, 
+            search_url, 
             params=params,
             headers=HEADERS, 
             timeout=60
@@ -79,84 +76,64 @@ def search_tender_by_title(tender_title):
             return None
         
         # Parse JSON response
-        try:
-            data = response.json()
-            if not data or 'tenders' not in data or not data['tenders'] or not data['tenders'].get('data'):
-                logger.warning(f"No search results found for tender: {tender_title}")
-                return None
-                
-            # Extract tender links from JSON
-            tenders_data = data['tenders']['data']
-            
-                # Create simulated "links" for processing similar to HTML parsing
-            tender_links = []
-            for t in tenders_data:
-                tender_id = t.get('id')
-                title = t.get('title', '')
-                
-                if tender_id and title:
-                    # Create a simple object with the needed attributes
-                    class Link:
-                        def __init__(self, href, text):
-                            self._href = href
-                            self._text = text
-                            
-                        def get(self, attr):
-                            if attr == 'href':
-                                return self._href
-                                
-                        def get_text(self, strip=True):
-                            return self._text
-                    
-                    # Create link with direct URL to tender details
-                    link = Link(f"/Tender/TenderDetails/{tender_id}", title)
-                    tender_links.append(link)
-                    
-            if not tender_links:
+        data = response.json()
+        
+        # Check if we got any search results
+        if not data or 'data' not in data or not data['data']:
             logger.warning(f"No search results found for tender: {tender_title}")
             return None
+            
+        # Extract tender data from JSON
+        tenders_data = data['data']
+        logger.info(f"Found {len(tenders_data)} potential matches")
         
-        logger.info(f"Found {len(tender_links)} potential matches")
+        # Store tenders along with their match scores
+        matches = []
         
-        # Find the link that most closely matches the tender title using fuzzy matching
-        best_match = None
-        best_match_score = 0
-        
-        for link in tender_links:
-            link_text = link.get_text(strip=True)
-            if not link_text:
+        for t in tenders_data:
+            tender_id = t.get('tenderId')  # This is the correct field from the API
+            title = t.get('tenderName', '')
+            
+            if not tender_id or not title:
                 continue
-                
-            # Calculate similarity between link text and tender title
+            
+            # Calculate similarity between search result title and original tender title
             # Simple similarity: count of common words
             tender_words = set(tender_title.lower().split())
-            link_words = set(link_text.lower().split())
-            common_words = tender_words.intersection(link_words)
+            result_words = set(title.lower().split())
+            common_words = tender_words.intersection(result_words)
             
             # Score based on common words and length similarity
-            score = len(common_words) / max(len(tender_words), len(link_words))
+            score = len(common_words) / max(len(tender_words), len(result_words))
             
-            logger.debug(f"Match score for '{link_text}': {score}")
+            # Construct the direct URL to the tender
+            url = f"https://tenders.etimad.sa/Tender/TenderDetails/{tender_id}"
             
-            if score > best_match_score:
-                href = link.get('href')
-                if href:
-                    best_match = f"{ETIMAD_BASE_URL}{href}"
-                    best_match_score = score
+            logger.debug(f"Match score for '{title}': {score:.2f}")
+            matches.append({
+                'title': title,
+                'url': url,
+                'score': score
+            })
+        
+        # If we didn't find any valid matches
+        if not matches:
+            logger.warning(f"No valid matches found for tender: {tender_title}")
+            return None
+            
+        # Sort matches by score, highest first
+        matches.sort(key=lambda x: x['score'], reverse=True)
+        best_match = matches[0]
         
         # Consider it a match if the score is above a reasonable threshold
-        if best_match and best_match_score > 0.3:  # Adjust threshold as needed
-            logger.info(f"Found URL for tender with score {best_match_score:.2f}: {best_match}")
-            return best_match
+        threshold = 0.2  # Lower threshold to allow more matches
+        if best_match['score'] > threshold:
+            logger.info(f"Found URL for tender with score {best_match['score']:.2f}: {best_match['url']}")
+            return best_match['url']
         else:
-            # If no good match, try using the first result as a fallback
-            if tender_links and tender_links[0].get('href'):
-                fallback_url = f"{ETIMAD_BASE_URL}{tender_links[0].get('href')}"
-                logger.warning(f"No strong match found, using first result: {fallback_url}")
-                return fallback_url
-            
-            logger.warning(f"No matching tender found for: {tender_title}")
-            return None
+            # If no good match, use the first result as a fallback
+            logger.warning(f"No strong match found, using first result: {best_match['url']}")
+            return best_match['url']
             
     except Exception as e:
         logger.error(f"Error searching for tender: {tender_title}. Error: {str(e)}")

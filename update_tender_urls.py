@@ -30,12 +30,13 @@ HEADERS = {
     "Cache-Control": "max-age=0"
 }
 
-def search_tender_by_title(tender_title):
+def search_tender_by_title(tender_title, target_tender_id=None):
     """
     Search for a tender on Etimad website by its title
     
     Args:
         tender_title (str): The title of the tender to search for
+        target_tender_id (str, optional): The tender ID we're looking for, to prioritize exact matches
         
     Returns:
         str: The tender URL if found, None otherwise
@@ -90,14 +91,26 @@ def search_tender_by_title(tender_title):
         # Store tenders along with their match scores
         matches = []
         
+        # Check if we have a target tender ID we're trying to match exactly
+        if target_tender_id:
+            logger.info(f"Looking for exact match with target tender ID: {target_tender_id}")
+        
         for t in tenders_data:
             tender_id = t.get('tenderId')  # This is the correct field from the API
             title = t.get('tenderName', '')
             
             if not tender_id or not title:
                 continue
+                
+            # Construct the direct URL to the tender
+            url = f"https://tenders.etimad.sa/Tender/TenderDetails/{tender_id}"
             
-            # Calculate similarity between search result title and original tender title
+            # If we have a target tender ID and this result matches it exactly, just return it immediately
+            if target_tender_id and str(tender_id) == str(target_tender_id):
+                logger.info(f"Found exact match for target tender ID {target_tender_id}: {url}")
+                return url
+            
+            # Otherwise calculate similarity score
             # Simple similarity: count of common words
             tender_words = set(tender_title.lower().split())
             result_words = set(title.lower().split())
@@ -106,14 +119,12 @@ def search_tender_by_title(tender_title):
             # Score based on common words and length similarity
             score = len(common_words) / max(len(tender_words), len(result_words))
             
-            # Construct the direct URL to the tender
-            url = f"https://tenders.etimad.sa/Tender/TenderDetails/{tender_id}"
-            
             logger.debug(f"Match score for '{title}': {score:.2f}")
             matches.append({
                 'title': title,
                 'url': url,
-                'score': score
+                'score': score,
+                'tender_id': tender_id
             })
         
         # If we didn't find any valid matches
@@ -192,13 +203,51 @@ def update_tender_urls(limit=None):
             for i, tender in enumerate(tenders):
                 logger.info(f"Processing tender {i+1}/{len(tenders)}: {tender.tender_id}")
                 
-                # Skip if the tender already has a valid URL from Etimad
-                # Valid URLs could be in several formats based on the site structure
-                if tender.tender_url and tender.tender_url.startswith("https://tenders.etimad.sa/") and not tender.tender_url.endswith("StenderID=%5BID%5D"):
-                    logger.info(f"Tender {tender.tender_id} already has a valid URL: {tender.tender_url}")
+                # Skip if tender already has a TenderDetails URL (which is the preferred format)
+                if tender.tender_url and "TenderDetails" in tender.tender_url:
+                    logger.info(f"Tender {tender.tender_id} already has a TenderDetails URL: {tender.tender_url}")
                     skipped_count += 1
                     continue
                 
+                # Process tenders with DetaielsForVisitors URLs to upgrade them to TenderDetails format
+                # Or process tenders with no URLs or placeholder URLs
+                
+                # If the tender already has a DetaielsForVisitors URL, try to extract the ID and create a direct URL
+                if tender.tender_url and "DetaielsForVisitors" in tender.tender_url:
+                    # Try to extract the tender ID from the existing URL
+                    try:
+                        import re
+                        tender_id_match = re.search(r'StenderID=(\d+)', tender.tender_url)
+                        
+                        if tender_id_match:
+                            extracted_id = tender_id_match.group(1)
+                            # Create a direct URL using the extracted ID
+                            direct_url = f"https://tenders.etimad.sa/Tender/TenderDetails/{extracted_id}"
+                            logger.info(f"Created direct URL from existing URL: {direct_url}")
+                            
+                            # Skip the search step
+                            logger.info(f"Skipping search for tender {tender.tender_id} as we extracted the ID from existing URL")
+                            
+                            # Go to update step
+                            try:
+                                # Update the tender URL
+                                tender.tender_url = direct_url
+                                db.session.commit()
+                                updated_count += 1
+                                logger.info(f"Updated URL for tender {tender.tender_id}: {direct_url}")
+                                # Continue to next tender
+                                continue
+                            except Exception as e:
+                                logger.error(f"Failed to update URL for tender {tender.tender_id}: {str(e)}")
+                                db.session.rollback()
+                                failed_count += 1
+                                # Continue to next tender
+                                continue
+                    except Exception as e:
+                        logger.error(f"Error extracting ID from URL {tender.tender_url}: {str(e)}")
+                        # Continue with search as fallback
+                        pass
+                        
                 # Search for the tender by title to get the actual URL
                 search_result_url = search_tender_by_title(tender.tender_title)
                 

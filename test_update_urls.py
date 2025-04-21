@@ -15,6 +15,14 @@ def test_update_urls():
     with app.app_context():
         print("Testing tender URL update process...")
         
+        # Get count of tenders with old DetaielsForVisitors URLs before update
+        old_format_urls_before = (
+            Tender.query.filter(
+                Tender.tender_url.like('%DetaielsForVisitors%')
+            ).count()
+        )
+        print(f"Tenders with old format URLs before update: {old_format_urls_before}")
+        
         # Get count of tenders with no URL or placeholder URL before update
         missing_urls_before = (
             Tender.query.filter(
@@ -34,6 +42,14 @@ def test_update_urls():
         
         print(f"Successfully updated {updated_count} tender URLs")
         
+        # Get count of tenders with old DetaielsForVisitors URLs after update
+        old_format_urls_after = (
+            Tender.query.filter(
+                Tender.tender_url.like('%DetaielsForVisitors%')
+            ).count()
+        )
+        print(f"Tenders with old format URLs after update: {old_format_urls_after}")
+        
         # Get count of tenders with no URL or placeholder URL after update
         missing_urls_after = (
             Tender.query.filter(
@@ -43,6 +59,14 @@ def test_update_urls():
             ).count()
         )
         print(f"Tenders with missing or placeholder URLs after update: {missing_urls_after}")
+        
+        # Get count of tenders with new TenderDetails URLs after update
+        new_format_urls_after = (
+            Tender.query.filter(
+                Tender.tender_url.like('%TenderDetails%')
+            ).count()
+        )
+        print(f"Tenders with new format URLs after update: {new_format_urls_after}")
         
         # Get a few examples of updated URLs
         updated_tenders = Tender.query.filter(

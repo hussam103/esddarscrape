@@ -362,3 +362,35 @@ def register_routes(app):
         except Exception as e:
             logger.error(f"Error starting embeddings regeneration: {str(e)}")
             return jsonify({'error': str(e)}), 500
+            
+    @app.route('/api/embeddings/migrate-vector-size', methods=['POST'])
+    def api_migrate_vector_size():
+        """API endpoint to migrate vector embeddings from 3072 to 1536 dimensions"""
+        try:
+            # Import the migration module
+            from run_vector_migration import run_migration
+            
+            # Run the process in a background thread to avoid timeouts
+            def run_migration_process():
+                with app.app_context():
+                    try:
+                        result = run_migration()
+                        if result:
+                            logger.info("Successfully migrated vector embeddings from 3072 to 1536 dimensions")
+                        else:
+                            logger.error("Failed to migrate vector embeddings")
+                    except Exception as e:
+                        logger.error(f"Error during vector migration: {str(e)}")
+            
+            # Start the migration in a background thread
+            thread = threading.Thread(target=run_migration_process)
+            thread.daemon = True
+            thread.start()
+            
+            return jsonify({
+                'status': 'success',
+                'message': 'Started migration of vector embeddings from 3072 to 1536 dimensions. This process will run in the background and may take some time.'
+            })
+        except Exception as e:
+            logger.error(f"Error starting vector migration: {str(e)}")
+            return jsonify({'error': str(e)}), 500

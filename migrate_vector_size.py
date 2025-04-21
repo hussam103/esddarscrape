@@ -17,17 +17,18 @@ def migrate_vector_size():
         with app.app_context():
             # Step 1: Clear all existing embeddings, they will be regenerated
             logger.info("Deleting all existing embeddings...")
-            db.session.execute("DELETE FROM tender_embeddings")
+            from sqlalchemy import text
+            db.session.execute(text("DELETE FROM tender_embeddings"))
             db.session.commit()
             logger.info("Deleted all existing embeddings")
             
             # Step 2: Update the vector dimension in the table
             logger.info("Updating vector dimension in tender_embeddings table...")
-            db.session.execute("ALTER TABLE tender_embeddings DROP COLUMN embedding")
+            db.session.execute(text("ALTER TABLE tender_embeddings DROP COLUMN embedding"))
             db.session.commit()
             
             # Step 3: Add the column back with the new dimension
-            db.session.execute("ALTER TABLE tender_embeddings ADD COLUMN embedding vector(1536)")
+            db.session.execute(text("ALTER TABLE tender_embeddings ADD COLUMN embedding vector(1536)"))
             db.session.commit()
             logger.info("Vector dimension updated to 1536")
             

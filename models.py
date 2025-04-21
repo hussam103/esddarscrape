@@ -26,6 +26,15 @@ class Tender(db.Model):
     updated_at = db.Column(db.DateTime, default=get_saudi_now, onupdate=get_saudi_now)
     
     def to_dict(self):
+        # Check if tender_url is in search format, if not, use a fallback URL to search page
+        url = self.tender_url
+        if url and not "AllTendersForVisitor?MultipleSearch=" in url:
+            # Create a fallback search URL based on the tender title
+            search_term = self.tender_title[:100] if self.tender_title else "Unknown Tender"
+            import urllib.parse
+            encoded_search_term = urllib.parse.quote(search_term)
+            url = f"https://tenders.etimad.sa/Tender/AllTendersForVisitor?MultipleSearch={encoded_search_term}&IsSearch=true&PageSize=6"
+            
         return {
             'id': self.id,
             'tender_id': self.tender_id,
@@ -34,7 +43,7 @@ class Tender(db.Model):
             'tender_type': self.tender_type,
             'tender_title': self.tender_title,
             'organization': self.organization,
-            'tender_url': self.tender_url,
+            'tender_url': url,  # Use the search format URL
             'main_activities': self.main_activities,
             'duration': self.duration,
             'inquiry_deadline': self.inquiry_deadline.isoformat() if self.inquiry_deadline else None,

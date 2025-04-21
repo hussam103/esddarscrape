@@ -107,14 +107,24 @@ def update_tender_urls():
             for i, tender in enumerate(tenders):
                 logger.info(f"Processing tender {i+1}/{len(tenders)}: {tender.tender_id}")
                 
-                # Skip if the tender already has a valid URL
-                if tender.tender_url and tender.tender_url.startswith("https://tenders.etimad.sa/"):
+                # Skip if the tender already has a valid URL from Etimad
+                # Valid URLs could be in several formats based on the site structure
+                if tender.tender_url and tender.tender_url.startswith("https://tenders.etimad.sa/") and not tender.tender_url.endswith("StenderID=%5BID%5D"):
                     logger.info(f"Tender {tender.tender_id} already has a valid URL: {tender.tender_url}")
                     skipped_count += 1
                     continue
                 
-                # Use the tender ID to construct the URL directly (most reliable method)
-                direct_url = f"https://tenders.etimad.sa/Tender/DetaielsForVisitors?StenderID={tender.tender_id}"
+                # Search for the tender by title to get the actual URL
+                search_result_url = search_tender_by_title(tender.tender_title)
+                
+                # If we found a URL from search, use it, otherwise skip this tender
+                if search_result_url:
+                    direct_url = search_result_url
+                else:
+                    # Skip this tender if search fails - no fallback URL
+                    logger.warning(f"Could not find URL for tender {tender.tender_id} by searching, skipping")
+                    failed_count += 1
+                    continue
                 
                 try:
                     # Update the tender URL

@@ -324,6 +324,7 @@ function initializeVectorSearch() {
     document.getElementById('run-vector-search').addEventListener('click', performVectorSearch);
     document.getElementById('generate-embeddings').addEventListener('click', generateEmbeddings);
     document.getElementById('regenerate-all-embeddings').addEventListener('click', regenerateAllEmbeddings);
+    document.getElementById('update-tender-urls').addEventListener('click', updateTenderUrls);
     
     // Initialize tooltips
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -516,6 +517,56 @@ function updateTableWithVectorResults() {
 }
 
 // Regenerate all embeddings with new text structure (title + organization + main activities)
+// Update all tender URLs to the correct format
+function updateTenderUrls() {
+    const button = document.getElementById('update-tender-urls');
+    const statusContainer = document.getElementById('vector-status');
+    
+    // Show confirmation dialog
+    if (!confirm('This will update all tender URLs to the correct format. This operation may take some time. Continue?')) {
+        return;
+    }
+    
+    // Disable button during update
+    button.setAttribute('disabled', 'disabled');
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating URLs...';
+    
+    statusContainer.innerHTML = '<div class="alert alert-info">Updating tender URLs. This may take some time...</div>';
+    
+    fetch('/api/update-tender-urls', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(result => {
+            statusContainer.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+            
+            // Re-enable button after 5 seconds
+            setTimeout(() => {
+                button.removeAttribute('disabled');
+                button.innerHTML = 'Update URLs';
+                
+                // Reload the table to show updated URLs
+                tendersTable.ajax.reload();
+            }, 5000);
+        })
+        .catch(error => {
+            console.error('Error updating tender URLs:', error);
+            statusContainer.innerHTML = '<div class="alert alert-danger">Error updating tender URLs. Please try again later.</div>';
+            
+            // Re-enable button
+            button.removeAttribute('disabled');
+            button.innerHTML = 'Update URLs';
+        });
+}
+
 function regenerateAllEmbeddings() {
     const button = document.getElementById('regenerate-all-embeddings');
     const statusContainer = document.getElementById('vector-status');

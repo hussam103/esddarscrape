@@ -21,14 +21,14 @@ def test_update_urls():
                 Tender.tender_url.like('%TenderDetails%')
             ).count()
             
-            # Get count of search URL format before update
+            # Get count of search URL format before update (using AllTendersForVisitor)
             search_format_count_before = Tender.query.filter(
-                Tender.tender_url.like('%List?SearchText=%')
+                Tender.tender_url.like('%AllTendersForVisitor%MultipleSearch=%')
             ).count()
             
             print(f"Tenders with DetaielsForVisitors URLs before update: {old_format_count_before}")
             print(f"Tenders with TenderDetails URLs before update: {details_format_count_before}")
-            print(f"Tenders with search URLs before update: {search_format_count_before}")
+            print(f"Tenders with AllTendersForVisitor search URLs before update: {search_format_count_before}")
             
             # Update a limited number of tender URLs, specifically targeting DetaielsForVisitors URLs
             limit = 5
@@ -65,12 +65,12 @@ def test_update_urls():
             
             # Get count of search URL format after update
             search_format_count_after = Tender.query.filter(
-                Tender.tender_url.like('%List?SearchText=%')
+                Tender.tender_url.like('%AllTendersForVisitor%MultipleSearch=%')
             ).count()
             
             print(f"Tenders with DetaielsForVisitors URLs after update: {old_format_count_after}")
             print(f"Tenders with TenderDetails URLs after update: {details_format_count_after}")
-            print(f"Tenders with search URLs after update: {search_format_count_after}")
+            print(f"Tenders with AllTendersForVisitor search URLs after update: {search_format_count_after}")
             
             return True
             

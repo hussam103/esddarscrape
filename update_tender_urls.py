@@ -38,25 +38,29 @@ def search_tender_by_title(tender_title):
         tender_title (str): The title of the tender to search for
         
     Returns:
-        str: The search results URL for the tender title
+        str: The search results URL for the tender title using the MultipleSearch parameter
     """
     if not tender_title or len(tender_title.strip()) < 5:
         logger.warning(f"Tender title too short or empty: '{tender_title}'")
         return None
         
     try:
-        # Take the first 5 words (or all words if fewer) for the search term
-        words = tender_title.split()
-        search_term = " ".join(words[:min(5, len(words))])
-        
+        # Use the full tender title for the search
         # URL encode the search term
-        encoded_search = urllib.parse.quote(search_term)
+        encoded_search = urllib.parse.quote(tender_title)
         
-        # Generate a direct search URL with the encoded search term
-        # This links directly to the search results page for the tender title
-        search_url = f"https://tenders.etimad.sa/Tender/List?SearchText={encoded_search}"
+        # Generate a direct search URL using the correct format
+        # This uses the AllTendersForVisitor endpoint with the MultipleSearch parameter
+        base_url = "https://tenders.etimad.sa/Tender/AllTendersForVisitor"
+        search_url = (f"{base_url}?&MultipleSearch={encoded_search}&TenderCategory=&TenderActivityId=0"
+                      f"&ReferenceNumber=&TenderNumber=&agency=&ConditionaBookletRange=&PublishDateId=5"
+                      f"&LastOfferPresentationDate=&LastOfferPresentationDate=&TenderAreasIdString="
+                      f"&TenderTypeId=&TenderActivityId=&TenderSubActivityId=&AgencyCode="
+                      f"&FromLastOfferPresentationDateString=&ToLastOfferPresentationDateString="
+                      f"&SortDirection=DESC&Sort=SubmitionDate&PageSize=6&IsSearch=true"
+                      f"&ConditionaBookletRange=&PublishDateId=5&PageNumber=1")
         
-        logger.info(f"Created search URL for tender title: '{search_term}'")
+        logger.info(f"Created search URL for tender title: '{tender_title}'")
         logger.info(f"Search URL: {search_url}")
         
         return search_url
@@ -77,33 +81,16 @@ def update_tender_urls(limit=None):
     """
     with app.app_context():
         try:
-            # Get tenders from the database
-            query = Tender.query
+            # Initialize the query to specifically target tenders with the old URL format
+            # that need to be updated to the search URL format
+            query = Tender.query.filter(
+                Tender.tender_url.like('%DetaielsForVisitors%')
+            )
             
             # Apply limit if specified
             if limit and limit > 0:
-                # Prioritize tenders with no URL or invalid URL format
-                tenders_needing_update = query.filter(
-                    (Tender.tender_url == None) | 
-                    (Tender.tender_url == '') | 
-                    (Tender.tender_url.like('%StenderID=%5BID%5D%'))
-                ).limit(limit).all()
-                
-                # If we don't have enough tenders needing update, get more up to the limit
-                if len(tenders_needing_update) < limit:
-                    remaining = limit - len(tenders_needing_update)
-                    # Exclude the ones we already got
-                    ids_to_exclude = [t.id for t in tenders_needing_update]
-                    more_tenders = []
-                    if ids_to_exclude:
-                        more_tenders = query.filter(~Tender.id.in_(ids_to_exclude)).limit(remaining).all()
-                    else:
-                        more_tenders = query.limit(remaining).all()
-                    tenders = tenders_needing_update + more_tenders
-                else:
-                    tenders = tenders_needing_update
-                
-                logger.info(f"Processing limited set of {len(tenders)} tenders")
+                tenders = query.limit(limit).all()
+                logger.info(f"Processing limited set of {len(tenders)} tenders with old format URLs")
             else:
                 # Get all tenders if no limit
                 tenders = query.all()
@@ -127,41 +114,8 @@ def update_tender_urls(limit=None):
                 # Process tenders with DetaielsForVisitors URLs to upgrade them to TenderDetails format
                 # Or process tenders with no URLs or placeholder URLs
                 
-                # If the tender already has a DetaielsForVisitors URL, try to extract the ID and create a direct URL
-                if tender.tender_url and "DetaielsForVisitors" in tender.tender_url:
-                    # Try to extract the tender ID from the existing URL
-                    try:
-                        import re
-                        tender_id_match = re.search(r'StenderID=(\d+)', tender.tender_url)
-                        
-                        if tender_id_match:
-                            extracted_id = tender_id_match.group(1)
-                            # Create a direct URL using the extracted ID
-                            direct_url = f"https://tenders.etimad.sa/Tender/TenderDetails/{extracted_id}"
-                            logger.info(f"Created direct URL from existing URL: {direct_url}")
-                            
-                            # Skip the search step
-                            logger.info(f"Skipping search for tender {tender.tender_id} as we extracted the ID from existing URL")
-                            
-                            # Go to update step
-                            try:
-                                # Update the tender URL
-                                tender.tender_url = direct_url
-                                db.session.commit()
-                                updated_count += 1
-                                logger.info(f"Updated URL for tender {tender.tender_id}: {direct_url}")
-                                # Continue to next tender
-                                continue
-                            except Exception as e:
-                                logger.error(f"Failed to update URL for tender {tender.tender_id}: {str(e)}")
-                                db.session.rollback()
-                                failed_count += 1
-                                # Continue to next tender
-                                continue
-                    except Exception as e:
-                        logger.error(f"Error extracting ID from URL {tender.tender_url}: {str(e)}")
-                        # Continue with search as fallback
-                        pass
+                # Always generate a search URL based on the tender title
+                # No need to extract IDs from old URLs since we're switching to search URLs
                         
                 # Search for the tender by title to get a search URL
                 search_result_url = search_tender_by_title(tender.tender_title)
